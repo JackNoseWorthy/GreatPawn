@@ -1,0 +1,338 @@
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+
+import javax.swing.*;
+
+
+public class ChessBoard extends JFrame implements ActionListener
+{
+		
+	ArrayList<JButton> list = new ArrayList<JButton>();
+	//used to keep track of the pieces on the board
+	ArrayList<Piece> pieces = new ArrayList<Piece>();
+	//used to keep track of the piece buttons on the board
+	ArrayList<JButton> pieceButtons = new ArrayList<JButton>();
+	
+	
+	public static void main(String[] args) 
+	{	
+		
+		new ChessBoard();
+		
+	}
+		
+		public ChessBoard() {
+		
+		//create a new JFrame
+		JFrame frame= new JFrame("Great Pawn");
+
+		//Create a chess board
+	    JLabel label = new JLabel(new ImageIcon("PicLib/GreenChessBoard.v3.png")); 
+	    label.setBounds(62,5,749,749); 
+	    //create JLabels that will display the letter ad number of the columns and rows
+	    JLabel letter1, letter2, letter3, letter4, letter5, letter6, letter7, letter8, number1, number2, number3, number4, number5, number6, number7, number8;	    
+	    letter1 = new JLabel ("a");
+	    letter1.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    letter1.setBounds(98,770,20,20);
+	    letter2 = new JLabel ("b");
+	    letter2.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    letter2.setBounds(192,770,20,20);
+	    letter3 = new JLabel ("c");
+	    letter3.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    letter3.setBounds(286,770,20,20);
+	    letter4 = new JLabel ("d");
+	    letter4.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    letter4.setBounds(380,770,20,20);
+	    letter5 = new JLabel ("e");
+	    letter5.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    letter5.setBounds(474,770,20,20);
+	    letter6 = new JLabel ("f");
+	    letter6.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    letter6.setBounds(568,770,20,25);
+	    letter7 = new JLabel ("g");
+	    letter7.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    letter7.setBounds(662,760,20,32);
+	    letter8 = new JLabel ("h");
+	    letter8.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    letter8.setBounds(756,770,20,20);
+	    
+	    number1 = new JLabel ("1");
+	    number1.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    number1.setBounds(25,700,20,25);
+	    number2 = new JLabel ("2");
+	    number2.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    number2.setBounds(25,606,20,25);
+	    number3 = new JLabel ("3");
+	    number3.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    number3.setBounds(25,512,20,25);
+	    number4 = new JLabel ("4");
+	    number4.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    number4.setBounds(25,418,20,25);
+	    number5 = new JLabel ("5");
+	    number5.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    number5.setBounds(25,324,20,25);
+	    number6 = new JLabel ("6");
+	    number6.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    number6.setBounds(25,230,20,25);
+	    number7 = new JLabel ("7");
+	    number7.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    number7.setBounds(25,136,20,25);
+	    number8 = new JLabel ("8");
+	    number8.setFont(new java.awt.Font("Arial", Font.ITALIC, 30));
+	    number8.setBounds(25,42,20,25);
+	    
+	  //create the pieces to the pieces array  
+	  for (int i = 1; i < 17; i++) {
+		  	  
+		  if (i < 9) {
+			  Piece piece = new Piece(true, "pawn", 2, i);
+			  pieces.add(piece);
+		  }else {
+			  Piece piece = new Piece(false, "pawn", 7, i - 8);
+			  pieces.add(piece);
+		  }
+		  
+	  }
+	  
+	  
+//	  Piece piece = new Piece(true, "rook", 1, 1);
+//	  pieces.add(piece);
+//	  Piece piece1 = new Piece(true, "knight", 1, 2);
+//	  pieces.add(piece1);
+	  Piece piece2 = new Piece(true, "bishop", 1, 3);
+	  pieces.add(piece2);
+//	  Piece piece3 = new Piece(true, "queen", 1, 4);
+//	  pieces.add(piece3);
+//	  Piece piece4 = new Piece(true, "king", 1, 5);
+//	  pieces.add(piece4);
+	  Piece piece5 = new Piece(true, "bishop", 1, 6);
+	  pieces.add(piece5);
+//	  Piece piece6 = new Piece(true, "knight", 1, 7);
+//	  pieces.add(piece6);
+//	  Piece piece7 = new Piece(true, "rook", 1, 8);
+//	  pieces.add(piece7);
+	  
+	  //System.out.println(pieces.get(18).getPieceType());
+	  
+//	  JButton button1 = new JButton (new ImageIcon ("PicLib/whiteRook.png"));
+//	 	pieceButtons.add(button1);
+//	 	pieceButtons.get(16).addActionListener(this);
+//	 	pieceButtons.get(16).setBounds(62 + 94 * (pieces.get(16).getColumn() - 1),663 - 94 * (pieces.get(16).getRow() - 1),94,94);	 	
+//	 	pieceButtons.get(16).setBorderPainted(false);
+//	 	pieceButtons.get(16).setContentAreaFilled(false);
+//	 	pieceButtons.get(16).setOpaque(false);
+	  
+	  //add the pieces to their appropriate starting positions on the board
+/*	  for (int i = 0; i < pieces.size(); i++) {
+		  if (pieces.get(i).getPieceType().equals("pawn")) {
+		  if (pieces.get(i).getColour() == true) {
+			 
+		 JButton button = new JButton (new ImageIcon ("PicLib/whitePawn.png"));
+		 	pieceButtons.add(button);
+		 	pieceButtons.get(i).addActionListener(this);
+		 	pieceButtons.get(i).setBounds(62 + 94 * (pieces.get(i).getColumn() - 1),663 - 94 * (pieces.get(i).getRow() - 1),94,94);	 	
+		 	pieceButtons.get(i).setBorderPainted(false);
+		 	pieceButtons.get(i).setContentAreaFilled(false);
+		 	pieceButtons.get(i).setOpaque(false);
+		 	pieceButtons.get(i).setVisible(true);
+			  
+		 }else {
+			 JButton button = new JButton (new ImageIcon ("PicLib/blackPawn.png"));
+			 pieceButtons.add(button);
+			 pieceButtons.get(i).addActionListener(this);
+			 pieceButtons.get(i).setBounds(62 + 94 * (pieces.get(i).getColumn() - 1),663 - 94 * (pieces.get(i).getRow() - 1),94,94);	 	
+			 pieceButtons.get(i).setBorderPainted(false);
+			 pieceButtons.get(i).setContentAreaFilled(false);
+			 pieceButtons.get(i).setOpaque(false);
+			 pieceButtons.get(i).setVisible(true);
+			 
+		 }
+		  }else if(pieces.get(i).getPieceType().equals("rook")){
+			  
+			  JButton button1 = new JButton (new ImageIcon ("PicLib/whiteRook.png"));
+			 	pieceButtons.add(button1);
+			 	pieceButtons.get(i).addActionListener(this);
+			 	pieceButtons.get(i).setBounds(62 + 94 * (pieces.get(16).getColumn() - 1),663 - 94 * (pieces.get(16).getRow() - 1),94,94);	 	
+			 	pieceButtons.get(i).setBorderPainted(false);
+			 	pieceButtons.get(i).setContentAreaFilled(false);
+			 	pieceButtons.get(i).setOpaque(false);
+			  
+		  }
+	  }*/
+	  
+	  for (int i = 0; i < pieces.size(); i++) {
+		  
+		  if (pieces.get(i).getColour() == true) {
+			  
+			  if (pieces.get(i).getPieceType().equals("pawn")) {
+				  
+				  JButton button = new JButton (new ImageIcon ("PicLib/whitePawn.png"));
+				  pieceButtons.add(button);
+				  
+			  }else if (pieces.get(i).getPieceType().equals("rook")) {
+				  
+				  JButton button = new JButton (new ImageIcon ("PicLib/whiteRook.png"));
+				  pieceButtons.add(button);
+				  
+			  }else if (pieces.get(i).getPieceType().equals("knight")) {
+				  
+				  JButton button = new JButton (new ImageIcon ("PicLib/whiteKnight.png"));
+				  pieceButtons.add(button);
+				  
+			  }else if (pieces.get(i).getPieceType().equals("bishop")) {
+				  
+				  System.out.println("hello");
+				  JButton button = new JButton (new ImageIcon ("PicLib/whiteBishop.png"));
+				  pieceButtons.add(button);
+				  
+			  }else if (pieces.get(i).getPieceType().equals("queen")) {
+				  
+				  JButton button = new JButton (new ImageIcon ("PicLib/whiteQueen.png"));
+				  pieceButtons.add(button);
+				  
+			  }else if (pieces.get(i).getPieceType().equals("king")) {
+				  
+				  JButton button = new JButton (new ImageIcon ("PicLib/whiteKing.png"));
+				  pieceButtons.add(button);
+				  
+			  }
+
+			  }else {
+				  
+				  if (pieces.get(i).getPieceType().equals("pawn")) {
+					  
+					  JButton button = new JButton (new ImageIcon ("PicLib/blackPawn.png"));
+					  pieceButtons.add(button);
+					  
+				  }else if (pieces.get(i).getPieceType().equals("rook")) {
+					  
+					  JButton button = new JButton (new ImageIcon ("PicLib/blackRook.png"));
+					  pieceButtons.add(button);
+					  
+				  }else if (pieces.get(i).getPieceType().equals("knight")) {
+					  
+					  JButton button = new JButton (new ImageIcon ("PicLib/blackKnight.png"));
+					  pieceButtons.add(button);
+					  
+				  }else if (pieces.get(i).getPieceType().equals("bishop")) {
+					  
+					  JButton button = new JButton (new ImageIcon ("PicLib/blackBishop.png"));
+					  pieceButtons.add(button);
+					  
+				  }else if (pieces.get(i).getPieceType().equals("queen")) {
+					  
+					  JButton button = new JButton (new ImageIcon ("PicLib/blackQueen.png"));
+					  pieceButtons.add(button);
+					  
+				  }else {
+					  
+					  JButton button = new JButton (new ImageIcon ("PicLib/blackKing.png"));
+					  pieceButtons.add(button);
+					  
+				  }
+				  
+				 	
+				  
+			  }
+		  
+		  	pieceButtons.get(i).addActionListener(this);
+		 	pieceButtons.get(i).setBounds(62 + 94 * (pieces.get(i).getColumn() - 1),663 - 94 * (pieces.get(i).getRow() - 1),94,94);	 	
+		 	pieceButtons.get(i).setBorderPainted(false);
+		 	pieceButtons.get(i).setContentAreaFilled(false);
+		 	pieceButtons.get(i).setOpaque(false);
+		  
+			  
+		  }
+	  
+	  	
+	  	System.out.println(pieceButtons.size());
+		  
+	  
+	  
+//	  JButton button1 = new JButton (new ImageIcon ("PicLib/whiteRook.png"));
+//	 	pieceButtons.add(button1);
+//	 	pieceButtons.get(16).addActionListener(this);
+//	 	pieceButtons.get(16).setBounds(62 + 94 * (pieces.get(16).getColumn() - 1),663 - 94 * (pieces.get(16).getRow() - 1),94,94);	 	
+//	 	pieceButtons.get(16).setBorderPainted(false);
+//	 	pieceButtons.get(16).setContentAreaFilled(false);
+//	 	pieceButtons.get(16).setOpaque(false);
+	  
+	   	//create a movement button
+	//  for (int i = 0; i < 1; i++) {
+		   
+		   JButton button = new JButton (new ImageIcon ("PicLib/circle.png"));
+		   list.add(button);
+		   
+	//	}
+	   
+		//add the movement buttons to the board
+	   	list.get(0).addActionListener(this);
+		list.get(0).setBounds(60, 5, 94, 94);	
+		list.get(0).setBorderPainted(false);
+	    list.get(0).setContentAreaFilled(false);
+	    list.get(0).setOpaque(false);
+		list.get(0).setVisible(true);
+	    
+		//add the buttons and labels to the frame
+//		for (int i = 0; i < pieceButtons.size(); i++) {
+			
+//			frame.add(pieceButtons.get(i));
+			
+//		}
+		frame.add(pieceButtons.get(0));
+		frame.add(pieceButtons.get(1));
+		frame.add(pieceButtons.get(2));
+		frame.add(pieceButtons.get(3));
+		frame.add(pieceButtons.get(4));
+		frame.add(pieceButtons.get(5));
+		frame.add(pieceButtons.get(6));
+		frame.add(pieceButtons.get(7));
+		frame.add(pieceButtons.get(8));
+		frame.add(pieceButtons.get(9));
+		frame.add(pieceButtons.get(10));
+		frame.add(pieceButtons.get(11));
+		frame.add(pieceButtons.get(12));
+		frame.add(pieceButtons.get(13));
+		frame.add(pieceButtons.get(14));
+		frame.add(pieceButtons.get(15));
+		frame.add(pieceButtons.get(16));
+		frame.add(pieceButtons.get(17));
+//		frame.add(pieceButtons.get(18));
+	    frame.add(list.get(0));
+	    frame.add(label); 
+	    frame.add(letter1);
+	    frame.add(letter2);
+	    frame.add(letter3);
+	    frame.add(letter4);
+	    frame.add(letter5);
+	    frame.add(letter6);
+	    frame.add(letter7);
+	    frame.add(letter8);
+	    frame.add(number1);
+	    frame.add(number2);
+	    frame.add(number3);
+	    frame.add(number4);
+	    frame.add(number5);
+	    frame.add(number6);
+	    frame.add(number7);
+	    frame.add(number8);
+	    frame.setSize(1400,850);  
+	    frame.setLayout(null);  
+	    frame.setVisible(true);
+	    
+	} // end main	
+	
+	public void actionPerformed(ActionEvent e)
+	{
+		
+		if(e.getSource() == list.get(0)) 
+		{
+				
+			System.out.println("yo");
+			
+			}
+		
+	}
+
+	
