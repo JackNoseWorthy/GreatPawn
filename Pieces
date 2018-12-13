@@ -1,0 +1,102 @@
+import java.util.ArrayList;
+
+public class Piece 
+{
+	
+	private boolean isWhite;
+	private String pieceType;
+	private int row;
+	private int column;
+	private boolean isMoved = false;
+
+	public Piece (boolean w, String p, int r, int c)
+	{
+		
+		isWhite = w;
+		pieceType = p;
+		row = r;
+		column = c;
+		
+	}
+	
+	public boolean getColour()
+	{
+		
+		return isWhite;
+		
+	}
+	
+	public String getPieceType () 
+	{
+		
+		return pieceType;
+		
+	}
+	
+	public int getRow() 
+	{
+		
+		return row;
+		
+	}
+	
+	public int getColumn()
+	{
+		
+		return column;
+		
+	}
+	
+	public boolean getIsMoved()
+	{
+		
+		return isMoved;
+		
+	}
+	
+	public void setPieceType (String p) 
+	{
+		
+		pieceType = p;
+		
+	}
+	
+	public void setRow(int r) 
+	{
+		
+		row = r;
+		
+	}
+	
+	public void setColumn(int c) 
+	{
+		
+		column = c;
+		
+	}
+	
+	public void setIsMoved(boolean b) 
+	{
+		
+		isMoved = b;
+		
+	}
+	
+public boolean isEqual(Piece e) {
+		
+		if (this.getColour() == e.getColour() && this.getPieceType().equals(e.getPieceType()) && this.getRow() == e.getRow() && this.getColumn() == e.getColumn()) {
+			
+			return true;
+			
+		}else {
+			
+			return false;
+			
+		}
+		
+	}
+
+
+	
+}
+
