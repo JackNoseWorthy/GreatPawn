@@ -1,0 +1,2855 @@
+
+import java.awt.Font;
+import java.awt.Insets;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.ArrayList;
+
+import javafx.application.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.Group;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.stage.*;
+import javafx.event.EventHandler;
+import javafx.geometry.HPos;
+import javafx.geometry.Pos;
+import javafx.event.ActionEvent;
+import javafx.scene.image.Image ;
+
+public class Main extends Application implements EventHandler<ActionEvent>
+{
+	Window window;
+	Scene scene1,scene2, scene3, scene4, scene5, scene6;
+	Button play, lessons, achievements, settings, quit, back, splay, tplay;
+	int scene;
+	static int lessonNum;
+	
+	
+	// The buttons in this list are used to display the possible moves of a piece
+		// and are clicked to move the piece there
+		
+		// These lists store the buttons that can be clicked to promote a pawn
+		ArrayList<Button> whitePromotionPieces = new ArrayList<Button>();
+		ArrayList<Button> blackPromotionPieces = new ArrayList<Button>();
+		// These lists store the last 5 moves from each colour and are used to check if
+		// a position is repeated three times in a row
+		ArrayList<Piece> threeMoveWhite = new ArrayList<Piece>();
+		ArrayList<Piece> threeMoveBlack = new ArrayList<Piece>();
+		// This variable stores the index of the piece that was selected by the user in
+	
+		// check and determining what moves are possible for specific pieces to avoid
+		// check
+		ArrayList<Piece> attackingPieces = new ArrayList<Piece>();
+
+		
+		// These variables store whether or not it is possible for the king to castle
+		// king and queen side
+		boolean kingCastle = false;
+		boolean queenCastle = false;
+		// This variable is used to prevent buttons other than those from the
+		// PromotionPieces lists from being clicked when the user is choosing the piece
+		// that the pawn will become when it is promoting
+		boolean promoting = false;
+		// These pieces are used to allow for enPassant; They are placed behind a pawn
+		// that just moved 2 spaces so that a pawn of the opposite colour can take it
+		Piece enPassantWhite = new Piece(true, "enPassant", 3, 10);
+		Piece enPassantBlack = new Piece(false, "enPassant", 6, 10);
+
+	
+	
+	static final int SQUARE_SIZE = 94;
+	ArrayList<Button> list = new ArrayList<Button>();
+	// used to keep track of the pieces on the board
+	
+	ArrayList<Piece> pieces = new ArrayList<Piece>();
+	// used to keep track of the piece buttons on the board
+	
+	ArrayList<Button> pieceButtons = new ArrayList<Button>();
+	int pieceSelected;
+
+	ArrayList<Integer> possibleMovesRow = new ArrayList<Integer>();
+	ArrayList<Integer> possibleMovesColumn = new ArrayList<Integer>();
+
+
+	boolean turn = true;
+	boolean whiteCheck = false;
+	boolean blackCheck = false;
+
+	
+
+	public static void main(String[] args)
+	{
+		launch(args);
+		//launch is going into application, setting everything up
+		//and then go into start
+	}
+
+	//all code written in here will be the main JavaFX code
+	public void start(Stage primaryStage) throws Exception
+	{
+		window = primaryStage;
+        primaryStage.getIcons().add(new Image("file:PicLib/knightIcon.png")); //adds image icon to the application
+        primaryStage.getStyle();
+        
+		scene  = 1 ;//setting the back  button to main scene
+		//1 - main
+		//2 - play
+		//3 - lessons
+		//4 - achievements
+		//5 - settings
+		
+		//initializes the movement buttons
+				for (int i = 0; i < 28; i++) 
+				{
+
+					Image imageDecline = new Image("file:PicLib/circle.png"); 
+					Button button = new Button();
+					button.setGraphic(new ImageView(imageDecline));
+		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+		    		button.setOnAction(this);
+					list.add(button);
+					button.setVisible(false); //sets to false so that the buttons dont show up as a clump at the top right of screen in initiation of lesson
+
+				}
+		
+		Button play = new Button();
+		play.setText("Play");
+		play.setVisible(true);
+		play.setPrefSize(100, 100);
+		play.setOnAction(new EventHandler<ActionEvent>()
+		{
+
+			//anonymous class to allow for scene change and back button use
+			public void handle(ActionEvent event)
+			{
+				primaryStage.setScene(scene2);
+				scene++;
+				
+			}
+			
+		});
+		play.setMaxWidth(500);
+		play.setMaxHeight(300);
+
+		
+		
+		Button lessons = new Button();
+		lessons.setText("Lessons");
+		lessons.setVisible(true);
+		lessons.setPrefSize(100, 100);
+		lessons.setOnAction(new EventHandler<ActionEvent>()
+		{
+
+			//anonymous class to allow for scene change and back button use
+			public void handle(ActionEvent event)
+			{
+				primaryStage.setScene(scene3);
+				scene = 3;
+				
+			}
+			
+		});
+		lessons.setMaxWidth(500);
+
+		
+		Button achievements = new Button();
+		achievements.setText("Achievements");
+		achievements.setVisible(true);
+		achievements.setPrefSize(100, 100);
+		achievements.setOnAction(e -> primaryStage.setScene(scene4)); //exits system upon click
+		achievements.setMaxWidth(500);
+
+		Button quit = new Button();
+		quit.setText("Quit");
+		quit.setVisible(true);
+		quit.setPrefSize(100, 100);
+		quit.setOnAction(this);
+		quit.setOnAction(e -> System.exit(1)); //exits system upon click
+		
+		Button quit1 = new Button();
+		quit1.setText("Quit");
+		quit1.setVisible(true);
+		quit1.setPrefSize(100, 100);
+		quit1.setOnAction(this);
+		quit1.setOnAction(e -> System.exit(1)); //goes back system upon click
+		
+		Button settings = new Button();
+		settings.setText("Settings");
+		settings.setVisible(true);
+		settings.setPrefSize(100, 100);
+		settings.setOnAction(this);
+		settings.setOnAction(e -> primaryStage.setScene(scene4)); //goes back system upon click
+		settings.setMaxWidth(500);
+
+		Button back = new Button();
+		back.setText("Back");
+		back.setVisible(true);
+		back.setPrefSize(100, 100);
+		back.setOnAction(e -> primaryStage.setScene(scene1)); //goes back system upon click
+
+		Button back1 = new Button();
+		back1.setText("Back");
+		back1.setVisible(true);
+		back1.setPrefSize(100, 100);
+		back1.setOnAction(e -> primaryStage.setScene(scene1)	); //goes back system upon click
+		
+		
+		Button back2 = new Button();
+		back2.setText("Back");
+		back2.setVisible(true);
+		back2.setPrefSize(100, 100);
+		back2.setOnAction(e -> primaryStage.setScene(scene1)); //goes back system upon click
+		
+		//play menu
+		Button splay = new Button();
+		splay.setText("Single Player");
+		splay.setVisible(true);
+		splay.setPrefSize(100, 100);
+		splay.setMaxWidth(500);
+		splay.setOnAction(e ->  //initializes the chess board and its game state
+		{
+			BorderPane border = new BorderPane();
+    		
+    		HBox hbox = addHBoxLetters();
+    		border.setBottom(hbox);
+    		
+    		VBox vbox = addVBoxNumbers();
+    		border.setLeft(vbox);
+    		
+    		GridPane gpane = addGPaneBoard();
+    		border.setCenter(gpane);
+
+    		vbox.setAlignment(Pos.TOP_LEFT);
+    		hbox.setAlignment(Pos.CENTER_LEFT);
+    		// create the pieces to the pieces array
+    		
+    		
+    		
+    		for (int i = 1; i < 17; i++) 
+    		{
+
+    			if (i < 9) {
+    				Piece piece = new Piece(true, "pawn", 2, i);
+    				pieces.add(piece);
+    			} else {
+    				Piece piece = new Piece(false, "pawn", 7, i - 8);
+    				pieces.add(piece);
+    			}
+
+    		}
+
+    		Piece piece = new Piece(true, "rook", 1, 1);
+    		pieces.add(piece);
+    		Piece piece1 = new Piece(true, "knight", 1, 2);
+    		pieces.add(piece1);
+    		Piece piece2 = new Piece(true, "bishop", 1, 3);
+    		pieces.add(piece2);
+    		Piece piece3 = new Piece(true, "queen", 1, 4);
+    		pieces.add(piece3);
+    		Piece piece4 = new Piece(true, "king", 1, 5);
+    		pieces.add(piece4);
+    		Piece piece5 = new Piece(true, "bishop", 1, 6);
+    		pieces.add(piece5);
+    		Piece piece6 = new Piece(true, "knight", 1, 7);
+    		pieces.add(piece6);
+    		Piece piece7 = new Piece(true, "rook", 1, 8);
+    		pieces.add(piece7);
+    		Piece piece8 = new Piece(false, "rook", 8, 1);
+    		pieces.add(piece8);
+    		Piece piece9 = new Piece(false, "knight", 8, 2);
+    		pieces.add(piece9);
+    		Piece piece10 = new Piece(false, "bishop", 8, 3);
+    		pieces.add(piece10);
+    		Piece piece11 = new Piece(false, "queen", 8, 4);
+    		pieces.add(piece11);
+    		Piece piece12 = new Piece(false, "king", 8, 5);
+    		pieces.add(piece12);
+    		Piece piece13 = new Piece(false, "bishop", 8, 6);
+    		pieces.add(piece13);
+    		Piece piece14 = new Piece(false, "knight", 8, 7);
+    		pieces.add(piece14);
+    		Piece piece15 = new Piece(false, "rook", 8, 8);
+    		pieces.add(piece15);
+
+    		for (int i = 0; i < pieces.size(); i++)
+    		{
+
+    			if (pieces.get(i).getColour() == true) 
+    			{
+
+    				if (pieces.get(i).getPieceType().equals("pawn"))
+    				{
+    					Image imageDecline = new Image("file:PicLib/whitePawn.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+
+    				} 
+    				
+    				else if (pieces.get(i).getPieceType().equals("rook")) 
+    				{
+
+    					Image imageDecline = new Image("file:PicLib/whiteRook.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+
+    				} 
+    				else if (pieces.get(i).getPieceType().equals("knight")) 
+    				{
+
+    					Image imageDecline = new Image("file:PicLib/whiteKnight.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+
+    				}
+    				else if (pieces.get(i).getPieceType().equals("bishop")) 
+    				{
+    					Image imageDecline = new Image("file:PicLib/whiteBishop.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+    				}
+    				else if (pieces.get(i).getPieceType().equals("queen")) 
+    				{
+    					Image imageDecline = new Image("file:PicLib/whiteQueen.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+    				}
+    				else if (pieces.get(i).getPieceType().equals("king")) 
+    				{
+    					Image imageDecline = new Image("file:PicLib/whiteKing.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+    				}
+
+    			} 
+    			else 
+    			{
+
+    				if (pieces.get(i).getPieceType().equals("pawn")) 
+    				{
+    					Image imageDecline = new Image("file:PicLib/BlackPawn.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+    				}
+    				
+    				else if (pieces.get(i).getPieceType().equals("rook")) 
+    				{
+    					Image imageDecline = new Image("file:PicLib/blackRook.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+    					
+    				} 
+    				
+    				else if (pieces.get(i).getPieceType().equals("knight"))
+    				{
+    					Image imageDecline = new Image("file:PicLib/blackKnight.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+    					
+
+    				}
+    				
+    				else if (pieces.get(i).getPieceType().equals("bishop"))
+    				{
+    					Image imageDecline = new Image("file:PicLib/blackBishop.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+    					
+    				} 
+    				
+    				else if (pieces.get(i).getPieceType().equals("queen")) 
+    				{
+    					Image imageDecline = new Image("file:PicLib/blackQueen.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+
+    				}
+    				else
+    				{
+    					Image imageDecline = new Image("file:PicLib/blackKing.png"); 
+    					Button button = new Button();
+    					button.setGraphic(new ImageView(imageDecline));
+    		    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    					pieceButtons.add(button);
+
+    				}
+
+    			}
+
+    			pieceButtons.get(i).setOnAction(this);
+    			
+    			
+    			pieceButtons.get(i).setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+    			pieceButtons.get(i).setLayoutY(rowToPixle(pieces.get(i).getRow()));
+    			pieceButtons.get(i).setLayoutX(columnToPixle(pieces.get(i).getColumn()));
+    			
+    			
+    			border.getChildren().addAll(pieceButtons); //ADDING BUTTONS IS THE MAIN PROBLEM HERE
+    			
+    			
+    		}
+    		
+    		/**
+    		 * change up this shit
+    		 *
+    		
+    		JButton promote1 = new JButton(new ImageIcon("PicLib/whiteQueen.png"));
+    		whitePromotionPieces.add(promote1);
+    		JButton promote2 = new JButton(new ImageIcon("PicLib/whiteRook.png"));
+    		whitePromotionPieces.add(promote2);
+    		JButton promote3 = new JButton(new ImageIcon("PicLib/whiteBishop.png"));
+    		whitePromotionPieces.add(promote3);
+    		JButton promote4 = new JButton(new ImageIcon("PicLib/whiteKnight.png"));
+    		whitePromotionPieces.add(promote4);
+    		JButton promote5 = new JButton(new ImageIcon("PicLib/blackQueen.png"));
+    		blackPromotionPieces.add(promote5);
+    		JButton promote6 = new JButton(new ImageIcon("PicLib/blackRook.png"));
+    		blackPromotionPieces.add(promote6);
+    		JButton promote7 = new JButton(new ImageIcon("PicLib/blackBishop.png"));
+    		blackPromotionPieces.add(promote7);
+    		JButton promote8 = new JButton(new ImageIcon("PicLib/blackKnight.png"));
+    		blackPromotionPieces.add(promote8);
+
+    		// finish creating the promotion buttons
+    		for (int i = 0; i < whitePromotionPieces.size(); i++) {
+
+    			whitePromotionPieces.get(i).addActionListener(this);
+    			whitePromotionPieces.get(i).setBounds(154 + (SQUARE_SIZE * i), 287, SQUARE_SIZE, SQUARE_SIZE);
+    			whitePromotionPieces.get(i).setBorderPainted(false);
+    			whitePromotionPieces.get(i).setContentAreaFilled(false);
+    			whitePromotionPieces.get(i).setOpaque(false);
+    			whitePromotionPieces.get(i).setVisible(false);
+
+    			blackPromotionPieces.get(i).addActionListener(this);
+    			blackPromotionPieces.get(i).setBounds(154 + (SQUARE_SIZE * i), 287, SQUARE_SIZE, SQUARE_SIZE);
+    			blackPromotionPieces.get(i).setBorderPainted(false);
+    			blackPromotionPieces.get(i).setContentAreaFilled(false);
+    			blackPromotionPieces.get(i).setOpaque(false);
+    			blackPromotionPieces.get(i).setVisible(false);
+
+    		}
+    		// add the promotion buttons to the frame
+    		for (int i = 0; i < whitePromotionPieces.size(); i++) {
+
+    			frame.add(whitePromotionPieces.get(i));
+
+    			frame.add(blackPromotionPieces.get(i));
+
+    		}
+    		
+    		
+    		 * end of change up
+    		 */
+    		
+    		//adding movement pieces to board
+    		for (int i = 0; i < 28; i++) 
+    		{
+
+    			
+    			
+    			Image imageDecline = new Image("file:PicLib/circle.png"); 
+				Button button = new Button();
+    			list.add(button);
+
+				button.setGraphic(new ImageView(imageDecline));
+	    		button.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				pieceButtons.add(button);
+
+    		}
+
+    		// add the buttons and labels to the frame
+    		for (int i = 0; i < list.size(); i++) 
+    		{
+
+    			//frame.add(list.get(i));
+
+    		}
+    		
+    		
+    		// add the movement buttons to the board
+    		for (int i = 0; i < pieceButtons.size(); i++)
+    		{
+
+    			//frame.add(pieceButtons.get(i));
+
+    		}
+    		
+    		
+    		Scene game = new Scene (border, 1400, 850);
+    		primaryStage.setScene(game);
+				
+		});
+		
+		
+		Button tplay = new Button();
+		tplay.setText("Two Player");
+		tplay.setVisible(true);
+		tplay.setPrefSize(100, 100);
+		tplay.setMaxWidth(500);
+		tplay.setOnAction(e ->
+		{
+				
+			for(int i = 0; i < pieces.size(); i++)
+    		{
+    			pieces.remove(i);  //clears the array so extra pieces dont show up
+    			
+    		}
+    		
+    		for(int i = 0; i < pieceButtons.size(); i++)
+    		{
+    			pieceButtons.remove(i);	//clears the array so extra pieces dont show up
+    		}
+    		
+    		BorderPane border = new BorderPane();
+
+    		HBox hbox = addHBoxLetters();
+    		border.setBottom(hbox);
+    		
+    		VBox vbox = addVBoxNumbers();
+    		border.setLeft(vbox);
+    		
+    		GridPane gpane = addGPaneBoard();
+    		border.setCenter(gpane);
+    		
+    		VBox explanation = addLessonReader();
+    		border.setRight(explanation);
+    		
+    		vbox.setAlignment(Pos.TOP_LEFT);
+    		hbox.setAlignment(Pos.CENTER_LEFT);
+				
+				
+				
+
+    		//adding white pawn to work
+    		Piece pawn = new Piece(true, "pawn", 2, 1);
+    		pieces.add(pawn);
+    		Image imageWPawn = new Image("file:PicLib/whitePawn.png"); 
+    		Button whitePawn = new Button();
+    		whitePawn.setGraphic(new ImageView(imageWPawn));
+    		whitePawn.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    		whitePawn.setOnAction(this);
+    		whitePawn.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+    		whitePawn.setLayoutY(rowToPixle(pawn.getRow()));
+    		whitePawn.setLayoutX(columnToPixle(pawn.getColumn()));
+    		pieceButtons.add(whitePawn);
+    		
+    		//add black pawn to work 
+    		Piece bPawn = new Piece(false, "pawn", 7, 2);
+    		pieces.add(bPawn);
+    		Image imageBPawn = new Image("file:PicLib/blackPawn.png"); 
+    		Button blackPawn = new Button();
+    		blackPawn.setGraphic(new ImageView(imageBPawn));
+    		blackPawn.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    		blackPawn.setOnAction(this);
+    		blackPawn.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+    		blackPawn.setLayoutY(rowToPixle(bPawn.getRow()));
+    		blackPawn.setLayoutX(columnToPixle(bPawn.getColumn()));
+    		pieceButtons.add(blackPawn);
+    		 //adding pawn to move
+    		whitePawn.setVisible(true);
+    		blackPawn.setVisible(true);
+
+    		
+    		//the white square bishop - WHITE PIECES
+    		Piece wWBishop = new Piece(true, "bishop", 1, 3);
+    		pieces.add(wWBishop);
+    		Image imageWBishop = new Image("file:PicLib/whiteBishop.png"); 
+    		Button whiteBishop = new Button();
+    		whiteBishop.setGraphic(new ImageView(imageWBishop));
+    		whiteBishop.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    		whiteBishop.setOnAction(this);
+    		whiteBishop.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+    		whiteBishop.setLayoutY(rowToPixle(wWBishop.getRow()));
+    		whiteBishop.setLayoutX(columnToPixle(wWBishop.getColumn()));
+    		pieceButtons.add(whiteBishop);
+    		
+    		//the black square bishop - WHITE PIECES
+    		Piece bWBishop = new Piece(true, "bishop", 1, 6);
+    		pieces.add(bWBishop);
+    		Button whitebBishop = new Button();
+    		whitebBishop.setGraphic(new ImageView(imageWBishop));
+    		whitebBishop.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    		whitebBishop.setOnAction(this);
+    		whitebBishop.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+    		whitebBishop.setLayoutY(rowToPixle(bWBishop.getRow()));
+    		whitebBishop.setLayoutX(columnToPixle(bWBishop.getColumn()));
+    		pieceButtons.add(whitebBishop);
+    		
+    	
+
+    		//add white square bishop - BLACK PIECES
+    		Piece blackBishop = new Piece(false, "bishop", 8, 3);
+    		pieces.add(blackBishop);
+    		Image imageBBishop = new Image("file:PicLib/blackBishop.png"); 
+    		Button blackwBishop = new Button();
+    		blackwBishop.setGraphic(new ImageView(imageBBishop));
+    		blackwBishop.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    		blackwBishop.setOnAction(this);
+    		blackwBishop.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+    		blackwBishop.setLayoutY(rowToPixle(blackBishop.getRow()));
+    		blackwBishop.setLayoutX(columnToPixle(blackBishop.getColumn()));
+    		pieceButtons.add(blackwBishop);
+    		
+    		//the black square bishop - BLACK PIECES
+    		Piece bbBishop = new Piece(false, "bishop", 8, 6);
+    		pieces.add(bbBishop);
+    		Button blackbBishop = new Button();
+    		blackbBishop.setGraphic(new ImageView(imageBBishop));
+    		blackbBishop.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+    		blackbBishop.setOnAction(this);
+    		blackbBishop.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+    		blackbBishop.setLayoutY(rowToPixle(bbBishop.getRow()));
+    		blackbBishop.setLayoutX(columnToPixle(bbBishop.getColumn()));
+    		pieceButtons.add(blackbBishop);
+
+    		//the white square knight - WHITE PIECES
+			Piece wWKnight = new Piece(true, "knight", 1, 2);
+			pieces.add(wWKnight);
+			Image imageWKnight = new Image("file:PicLib/whiteKnight.png"); 
+			Button whiteKnight = new Button();
+			whiteKnight.setGraphic(new ImageView(imageWKnight));
+			whiteKnight.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+			whiteKnight.setOnAction(this);
+			whiteKnight.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+			whiteKnight.setLayoutY(rowToPixle(wWKnight.getRow()));
+			whiteKnight.setLayoutX(columnToPixle(wWKnight.getColumn()));
+			pieceButtons.add(whiteKnight);
+			
+			//the black square Knight - WHITE PIECES
+			Piece bWKnight = new Piece(true, "knight", 1, 7);
+			pieces.add(bWKnight);
+			Button whitebKnight = new Button();
+			whitebKnight.setGraphic(new ImageView(imageWKnight));
+			whitebKnight.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+			whitebKnight.setOnAction(this);
+			whitebKnight.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+			whitebKnight.setLayoutY(rowToPixle(bWKnight.getRow()));
+			whitebKnight.setLayoutX(columnToPixle(bWKnight.getColumn()));
+			pieceButtons.add(whitebKnight);
+	
+	//the white square knight - BLACK PIECES
+		Piece wBKnight = new Piece(false, "knight", 8, 2);
+		pieces.add(wBKnight);
+		Image imageBKnight = new Image("file:PicLib/blackKnight.png");
+		Button blackKnight = new Button();
+		blackKnight.setGraphic(new ImageView(imageBKnight));
+		blackKnight.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+		blackKnight.setOnAction(this);
+		blackKnight.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+		blackKnight.setLayoutY(rowToPixle(wBKnight.getRow()));
+		blackKnight.setLayoutX(columnToPixle(wBKnight.getColumn()));
+		pieceButtons.add(blackKnight);
+			
+		//the black square Knight - BlACK PIECES
+		Piece bBKnight = new Piece(false, "knight", 8, 7);
+		pieces.add(bBKnight);
+		Button blackbKnight = new Button();
+		blackbKnight.setGraphic(new ImageView(imageBKnight));
+		blackbKnight.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+		blackbKnight.setOnAction(this);
+		blackbKnight.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+		blackbKnight.setLayoutY(rowToPixle(bBKnight.getRow()));
+		blackbKnight.setLayoutX(columnToPixle(bBKnight.getColumn()));
+		pieceButtons.add(blackbKnight);
+		
+		//the white rook - WHITE PIECES
+		Piece wWrook = new Piece(true, "rook", 1, 1);
+		pieces.add(wWrook);
+		Image imageWrook = new Image("file:PicLib/whiteRook.png"); 
+		Button whiterook = new Button();
+		whiterook.setGraphic(new ImageView(imageWrook));
+		whiterook.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+		whiterook.setOnAction(this);
+		whiterook.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+		whiterook.setLayoutY(rowToPixle(wWrook.getRow()));
+		whiterook.setLayoutX(columnToPixle(wWrook.getColumn()));
+		pieceButtons.add(whiterook);
+		
+		//the white rook - WHITE PIECES
+				Piece wwWrook = new Piece(true, "rook", 1, 8);
+				pieces.add(wwWrook);
+				Button whitewrook = new Button();
+				whitewrook.setGraphic(new ImageView(imageWrook));
+				whitewrook.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				whitewrook.setOnAction(this);
+				whitewrook.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+				whitewrook.setLayoutY(rowToPixle(wwWrook.getRow()));
+				whitewrook.setLayoutX(columnToPixle(wwWrook.getColumn()));
+				pieceButtons.add(whitewrook);
+		
+		//the black rook - BlACK PIECES
+		Piece bBrook = new Piece(false, "rook", 8, 8);
+		pieces.add(bBrook);
+		Image imagebrook = new Image("file:PicLib/blackRook.png"); 
+		Button blackbrook = new Button();
+		blackbrook.setGraphic(new ImageView(imagebrook));
+		blackbrook.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+		blackbrook.setOnAction(this);
+		blackbrook.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+		blackbrook.setLayoutY(rowToPixle(bBrook.getRow()));
+		blackbrook.setLayoutX(columnToPixle(bBrook.getColumn()));
+		pieceButtons.add(blackbrook);
+		
+		//the black rook - BlACK PIECES
+				Piece bbBrook = new Piece(false, "rook", 8, 1);
+				pieces.add(bbBrook);
+				Button blackbbrook = new Button();
+				blackbbrook.setGraphic(new ImageView(imagebrook));
+				blackbbrook.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				blackbbrook.setOnAction(this);
+				blackbbrook.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+				blackbbrook.setLayoutY(rowToPixle(bbBrook.getRow()));
+				blackbbrook.setLayoutX(columnToPixle(bbBrook.getColumn()));
+				pieceButtons.add(blackbbrook);
+		
+		
+				//the white queen - WHITE PIECES
+				Piece wWqueen = new Piece(true, "queen", 1, 4);
+				pieces.add(wWqueen);
+				Image imageWqueen = new Image("file:PicLib/whiteQueen.png"); 
+				Button whitequeen = new Button();
+				whitequeen.setGraphic(new ImageView(imageWqueen));
+				whitequeen.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				whitequeen.setOnAction(this);
+				whitequeen.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+				whitequeen.setLayoutY(rowToPixle(wWqueen.getRow()));
+				whitequeen.setLayoutX(columnToPixle(wWqueen.getColumn()));
+				pieceButtons.add(whitequeen);
+				
+				//the black queent - BlACK PIECES
+				Piece bBqueen = new Piece(false, "queen", 8, 4);
+				pieces.add(bBqueen);
+				Image imagebqueen = new Image("file:PicLib/blackQueen.png"); 
+				Button blackbqueen = new Button();
+				blackbqueen.setGraphic(new ImageView(imagebqueen));
+				blackbqueen.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				blackbqueen.setOnAction(this);
+				blackbqueen.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+				blackbqueen.setLayoutY(rowToPixle(bBqueen.getRow()));
+				blackbqueen.setLayoutX(columnToPixle(bBqueen.getColumn()));
+				pieceButtons.add(blackbqueen);
+				
+				
+				//the white queen - WHITE PIECES
+				Piece wWking = new Piece(true, "king", 1, 5);
+				pieces.add(wWking);
+				Image imageWking = new Image("file:PicLib/whiteKing.png"); 
+				Button whiteking = new Button();
+				whiteking.setGraphic(new ImageView(imageWking));
+				whiteking.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				whiteking.setOnAction(this);
+				whiteking.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+				whiteking.setLayoutY(rowToPixle(wWking.getRow()));
+				whiteking.setLayoutX(columnToPixle(wWking.getColumn()));
+				pieceButtons.add(whiteking);
+				
+				//the black kingt - BlACK PIECES
+				Piece bBking = new Piece(false, "king", 8, 5);
+				pieces.add(bBking);
+				Image imagebking = new Image("file:PicLib/blackKing.png"); 
+				Button blackbking = new Button();
+				blackbking.setGraphic(new ImageView(imagebking));
+				blackbking.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				blackbking.setOnAction(this);
+				blackbking.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+				blackbking.setLayoutY(rowToPixle(bBking.getRow()));
+				blackbking.setLayoutX(columnToPixle(bBking.getColumn()));
+				pieceButtons.add(blackbking);
+				
+    		border.getChildren().addAll(whitePawn,blackPawn, whiteBishop, whitebBishop, blackwBishop, blackbBishop, whiteKnight, whitebKnight, blackKnight, blackbKnight, whitewrook, whiterook, blackbrook, blackbbrook, 
+    				whitequeen, blackbqueen, whiteking, blackbking);
+    		
+    		// add the movement buttons to the board
+    		for (int i = 0; i < list.size(); i++)
+    		{
+
+    			border.getChildren().addAll(list.get(i));   //list has to be added last, because otherwise its the same as clicking a bishop instead of a move button. Basically a second layer
+    		
+    			
+    		}
+    	    
+    		
+    	    Scene les1 = new Scene (border, 1400, 850);
+    		primaryStage.setScene(les1);
+				
+				
+		});
+		
+		
+		//end of play menu
+		
+		
+		//lessons menu
+		ChoiceBox<String> lessonSelect = new ChoiceBox<>();
+		lessonSelect.setPrefSize(100, 100);
+		lessonSelect.setMaxWidth(500);
+		lessonSelect.setTooltip(new Tooltip("Select the language"));
+			//get items adding to the choicebox
+		String lesson1 = "Pawn Movement";
+		String lesson2 = "Bishop Movement";
+		String lesson3 = "Knight Movement";
+		String lesson4 = "Rook Movement";
+		String lesson5 = "Queen Movement";
+		String lesson6 = "King. Check and Checkmate.";
+		String lesson7 = "Castling";
+		String lesson8 = "En Passant";
+		
+		
+		
+	    lessonSelect.getItems().addAll(lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8);
+	    lessonSelect.setOnAction(e ->  //after user selects one of the lesson options the lesson pops up on the board
+	    {
+	    	String lessonChoice = lessonSelect.getValue();
+			
+			
+	    	if(lessonChoice == lesson1) //pawn lesson
+	    	{
+	    		for(int i = 0; i < pieces.size(); i++)
+	    		{
+	    			pieces.remove(i);  //clears the array so extra pieces don't show up
+	    			
+	    		}
+	    		
+	    		for(int i = 0; i < pieceButtons.size(); i++)
+	    		{
+	    			pieceButtons.remove(i);	//clears the array so extra pieces don't show up
+	    		}
+	    		
+	    		lessonNum = 1;
+	    		BorderPane border = new BorderPane();
+	    		
+	    		HBox hbox = addHBoxLetters();
+	    		border.setBottom(hbox);
+	    		
+	    		VBox vbox = addVBoxNumbers();
+	    		border.setLeft(vbox);
+	    		
+	    		GridPane gpane = addGPaneBoard();
+	    		border.setCenter(gpane);
+	    		
+	    		VBox explanation = addLessonReader();
+	    		border.setRight(explanation);
+	    		
+	    		vbox.setAlignment(Pos.TOP_LEFT);
+	    		hbox.setAlignment(Pos.CENTER_LEFT);
+	    		explanation.setAlignment(Pos.TOP_RIGHT);
+	    		
+	    		//adding white pawn to work
+	    		Piece pawn = new Piece(true, "pawn", 2, 1);
+	    		pieces.add(pawn);
+	    		Image imageWPawn = new Image("file:PicLib/whitePawn.png"); 
+	    		Button whitePawn = new Button();
+	    		whitePawn.setGraphic(new ImageView(imageWPawn));
+	    		whitePawn.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+	    		whitePawn.setOnAction(this);
+	    		whitePawn.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+	    		whitePawn.setLayoutY(rowToPixle(pawn.getRow()));
+	    		whitePawn.setLayoutX(columnToPixle(pawn.getColumn()));
+	    		pieceButtons.add(whitePawn);
+	    		
+	    		//add black pawn to work 
+	    		Piece bPawn = new Piece(false, "pawn", 7, 2);
+	    		pieces.add(bPawn);
+	    		Image imageBPawn = new Image("file:PicLib/blackPawn.png"); 
+	    		Button blackPawn = new Button();
+	    		blackPawn.setGraphic(new ImageView(imageBPawn));
+	    		blackPawn.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+	    		blackPawn.setOnAction(this);
+	    		blackPawn.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+	    		blackPawn.setLayoutY(rowToPixle(bPawn.getRow()));
+	    		blackPawn.setLayoutX(columnToPixle(bPawn.getColumn()));
+	    		pieceButtons.add(blackPawn);
+	    		 //adding pawn to move
+	    		whitePawn.setVisible(true);
+	    		blackPawn.setVisible(true);
+	
+	    		
+	    		border.getChildren().addAll(whitePawn,blackPawn);
+	    		// add the movement buttons to the board
+	    		for (int i = 0; i < list.size(); i++)
+	    		{
+
+	    			border.getChildren().addAll(list.get(i));   //list has to be added last, because otherwise its the same as clicking a bishop instead of a move button. Basically a second layer
+	    		
+	    			
+	    		}
+	    	    
+	    		
+	    	    Scene les1 = new Scene (border, 1400, 850);
+	    		primaryStage.setScene(les1);
+	    		
+	    		
+	    	}
+	    	
+	    	if(lessonChoice == lesson2) //bishop movement
+	    	{
+	    		lessonNum = 2;
+	    		
+	    		for(int i = 0; i < pieces.size(); i++)
+	    		{
+	    			pieces.remove(i);  //clears the array so extra pieces dont show up
+	    			
+	    		}
+	    		
+	    		for(int i = 0; i < pieceButtons.size(); i++)
+	    		{
+	    			pieceButtons.remove(i);	//clears the array so extra pieces dont show up
+	    		}
+	    		
+	    		BorderPane border = new BorderPane();
+	    		
+	    		HBox hbox = addHBoxLetters();
+	    		border.setBottom(hbox);
+	    		
+	    		VBox vbox = addVBoxNumbers();
+	    		border.setLeft(vbox);
+	    		
+	    		GridPane gpane = addGPaneBoard();
+	    		border.setCenter(gpane);
+	    		
+	    		VBox explanation = addLessonReader();
+	    		border.setRight(explanation);
+	    		
+	    		vbox.setAlignment(Pos.TOP_LEFT);
+	    		hbox.setAlignment(Pos.CENTER_LEFT);
+	    		explanation.setAlignment(Pos.TOP_RIGHT);
+	    		
+	    		/**
+	    		 * PIECE INITIALIZATION
+	    		 */
+	    		
+	    		//the white square bishop - WHITE PIECES
+	    		Piece wWBishop = new Piece(true, "bishop", 1, 3);
+	    		pieces.add(wWBishop);
+	    		Image imageWBishop = new Image("file:PicLib/whiteBishop.png"); 
+	    		Button whiteBishop = new Button();
+	    		whiteBishop.setGraphic(new ImageView(imageWBishop));
+	    		whiteBishop.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+	    		whiteBishop.setOnAction(this);
+	    		whiteBishop.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+	    		whiteBishop.setLayoutY(rowToPixle(wWBishop.getRow()));
+	    		whiteBishop.setLayoutX(columnToPixle(wWBishop.getColumn()));
+	    		pieceButtons.add(whiteBishop);
+	    		
+	    		//the black square bishop - WHITE PIECES
+	    		Piece bWBishop = new Piece(true, "bishop", 1, 6);
+	    		pieces.add(bWBishop);
+	    		Button whitebBishop = new Button();
+	    		whitebBishop.setGraphic(new ImageView(imageWBishop));
+	    		whitebBishop.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+	    		whitebBishop.setOnAction(this);
+	    		whitebBishop.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+	    		whitebBishop.setLayoutY(rowToPixle(bWBishop.getRow()));
+	    		whitebBishop.setLayoutX(columnToPixle(bWBishop.getColumn()));
+	    		pieceButtons.add(whitebBishop);
+	    		
+	    	
+
+	    		//add white square bishop - BLACK PIECES
+	    		Piece blackBishop = new Piece(false, "bishop", 8, 3);
+	    		pieces.add(blackBishop);
+	    		Image imageBBishop = new Image("file:PicLib/blackBishop.png"); 
+	    		Button blackwBishop = new Button();
+	    		blackwBishop.setGraphic(new ImageView(imageBBishop));
+	    		blackwBishop.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+	    		blackwBishop.setOnAction(this);
+	    		blackwBishop.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+	    		blackwBishop.setLayoutY(rowToPixle(blackBishop.getRow()));
+	    		blackwBishop.setLayoutX(columnToPixle(blackBishop.getColumn()));
+	    		pieceButtons.add(blackwBishop);
+	    		
+	    		//the black square bishop - BLACK PIECES
+	    		Piece bbBishop = new Piece(false, "bishop", 8, 6);
+	    		pieces.add(bbBishop);
+	    		Button blackbBishop = new Button();
+	    		blackbBishop.setGraphic(new ImageView(imageBBishop));
+	    		blackbBishop.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+	    		blackbBishop.setOnAction(this);
+	    		blackbBishop.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+	    		blackbBishop.setLayoutY(rowToPixle(bbBishop.getRow()));
+	    		blackbBishop.setLayoutX(columnToPixle(bbBishop.getColumn()));
+	    		pieceButtons.add(blackbBishop);
+	    		
+	    		/**
+	    		 * PIECE INITILIAZATION DONE
+	    		 */
+	    		
+	    		
+	    		blackwBishop.setVisible(true);
+	    		blackbBishop.setVisible(true);
+	    		whiteBishop.setVisible(true);
+	    		whitebBishop.setVisible(true);
+	    		
+	    		
+	    		border.getChildren().addAll(blackwBishop,blackbBishop,whiteBishop, whitebBishop);
+	    		
+	    		// add the movement buttons to the board
+	    		for (int i = 0; i < list.size(); i++)
+	    		{
+
+	    			border.getChildren().addAll(list.get(i));   //list has to be added last, because otherwise its the same as clicking a bishop instead of a move button. Basically a second layer
+	    		
+	    			
+	    		}
+	    	    
+	    		Scene les2 = new Scene (border, 1400, 850);
+	    		primaryStage.setScene(les2);
+	    		
+	    	}
+	    	
+	    	if(lessonChoice == lesson3) //knight movement
+	    	{
+	    		lessonNum = 3;
+	    	
+	    		for(int i = 0; i < pieces.size(); i++)
+	    		{
+	    			pieces.remove(i);  //clears the array so extra pieces dont show up
+	    			
+	    		}
+	    		
+	    		for(int i = 0; i < pieceButtons.size(); i++)
+	    		{
+	    			pieceButtons.remove(i);	//clears the array so extra pieces dont show up
+	    		}
+	    		
+	    		
+	    		BorderPane border = new BorderPane();
+	    		
+	    		HBox hbox = addHBoxLetters();
+	    		border.setBottom(hbox);
+	    		
+	    		VBox vbox = addVBoxNumbers();
+	    		border.setLeft(vbox);
+	    		
+	    		GridPane gpane = addGPaneBoard();
+	    		border.setCenter(gpane);
+	    		
+	    		VBox explanation = addLessonReader();
+	    		border.setRight(explanation);
+	    		
+	    		vbox.setAlignment(Pos.TOP_LEFT);
+	    		hbox.setAlignment(Pos.CENTER_LEFT);
+	    		explanation.setAlignment(Pos.TOP_RIGHT);
+	    		
+	    		
+	    		/**
+	    		 *  PIECE INITIALIZATION
+	    		 */
+	    		
+	    		//the white square knight - WHITE PIECES
+				Piece wWKnight = new Piece(true, "knight", 1, 2);
+				pieces.add(wWKnight);
+				Image imageWKnight = new Image("file:PicLib/whiteKnight.png"); 
+				Button whiteKnight = new Button();
+				whiteKnight.setGraphic(new ImageView(imageWKnight));
+				whiteKnight.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				whiteKnight.setOnAction(this);
+				whiteKnight.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+				whiteKnight.setLayoutY(rowToPixle(wWKnight.getRow()));
+				whiteKnight.setLayoutX(columnToPixle(wWKnight.getColumn()));
+				pieceButtons.add(whiteKnight);
+				
+				//the black square Knight - WHITE PIECES
+				Piece bWKnight = new Piece(true, "knight", 1, 7);
+				pieces.add(bWKnight);
+				Button whitebKnight = new Button();
+				whitebKnight.setGraphic(new ImageView(imageWKnight));
+				whitebKnight.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				whitebKnight.setOnAction(this);
+				whitebKnight.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+				whitebKnight.setLayoutY(rowToPixle(bWKnight.getRow()));
+				whitebKnight.setLayoutX(columnToPixle(bWKnight.getColumn()));
+				pieceButtons.add(whitebKnight);
+		
+		//the white square knight - BLACK PIECES
+			Piece wBKnight = new Piece(false, "knight", 8, 2);
+			pieces.add(wBKnight);
+			Image imageBKnight = new Image("file:PicLib/blackKnight.png");
+			Button blackKnight = new Button();
+			blackKnight.setGraphic(new ImageView(imageBKnight));
+			blackKnight.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+			blackKnight.setOnAction(this);
+			blackKnight.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+			blackKnight.setLayoutY(rowToPixle(wBKnight.getRow()));
+			blackKnight.setLayoutX(columnToPixle(wBKnight.getColumn()));
+			pieceButtons.add(blackKnight);
+				
+			//the black square Knight - BlACK PIECES
+			Piece bBKnight = new Piece(false, "knight", 8, 7);
+			pieces.add(bBKnight);
+			Button blackbKnight = new Button();
+			blackbKnight.setGraphic(new ImageView(imageBKnight));
+			blackbKnight.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+			blackbKnight.setOnAction(this);
+			blackbKnight.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+			blackbKnight.setLayoutY(rowToPixle(bBKnight.getRow()));
+			blackbKnight.setLayoutX(columnToPixle(bBKnight.getColumn()));
+			pieceButtons.add(blackbKnight);
+		
+		
+				/**
+			 	* Piece initialization
+		 		*/
+	    		whiteKnight.setVisible(true);
+	    		whitebKnight.setVisible(true);
+	    		blackKnight.setVisible(true);
+	    		blackbKnight.setVisible(true);
+	    		
+	    		
+	    		border.getChildren().addAll(whiteKnight, whitebKnight, blackKnight, blackbKnight);
+	    		// add the movement buttons to the board
+	    		for (int i = 0; i < list.size(); i++)
+	    		{
+
+	    			border.getChildren().addAll(list.get(i));   //list has to be added last, because otherwise its the same as clicking a bishop instead of a move button. Basically a second layer
+	    		
+	    			
+	    		}
+	    	    
+	    		
+	    		Scene les3 = new Scene (border, 1400, 850);
+	    		primaryStage.setScene(les3);
+	    		
+	    	}
+	    	
+	    	if(lessonChoice == lesson4) //rook movement
+	    	{
+	    		lessonNum = 4;
+	    		for(int i = 0; i < pieces.size(); i++)
+	    		{
+	    			pieces.remove(i);  //clears the array so extra pieces dont show up
+	    			
+	    		}
+	    		
+	    		for(int i = 0; i < pieceButtons.size(); i++)
+	    		{
+	    			pieceButtons.remove(i);	//clears the array so extra pieces dont show up
+	    		}
+	    		
+	    		BorderPane border = new BorderPane();
+
+	    		HBox hbox = addHBoxLetters();
+	    		border.setBottom(hbox);
+	    		
+	    		VBox vbox = addVBoxNumbers();
+	    		border.setLeft(vbox);
+	    		
+	    		GridPane gpane = addGPaneBoard();
+	    		border.setCenter(gpane);
+	    		
+	    		VBox explanation = addLessonReader();
+	    		border.setRight(explanation);
+	    		
+	    		vbox.setAlignment(Pos.TOP_LEFT);
+	    		hbox.setAlignment(Pos.CENTER_LEFT);
+	    		explanation.setAlignment(Pos.TOP_RIGHT);
+	    		
+	    		
+	    		/**
+	    		 *  PIECE INITIALIZATION
+	    		 */
+	    		//the white rook - WHITE PIECES
+				Piece wWrook = new Piece(true, "rook", 1, 1);
+				pieces.add(wWrook);
+				Image imageWrook = new Image("file:PicLib/whiteRook.png"); 
+				Button whiterook = new Button();
+				whiterook.setGraphic(new ImageView(imageWrook));
+				whiterook.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				whiterook.setOnAction(this);
+				whiterook.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+				whiterook.setLayoutY(rowToPixle(wWrook.getRow()));
+				whiterook.setLayoutX(columnToPixle(wWrook.getColumn()));
+				pieceButtons.add(whiterook);
+				
+				//the black rook - BlACK PIECES
+				Piece bBrook = new Piece(false, "rook", 8, 8);
+				pieces.add(bBrook);
+				Image imagebrook = new Image("file:PicLib/blackRook.png"); 
+				Button blackbrook = new Button();
+				blackbrook.setGraphic(new ImageView(imagebrook));
+				blackbrook.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				blackbrook.setOnAction(this);
+				blackbrook.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+				blackbrook.setLayoutY(rowToPixle(bBrook.getRow()));
+				blackbrook.setLayoutX(columnToPixle(bBrook.getColumn()));
+				pieceButtons.add(blackbrook);
+				
+				border.getChildren().addAll(whiterook,blackbrook);
+	    		// add the movement buttons to the board
+	    		for (int i = 0; i < list.size(); i++)
+	    		{
+
+	    			border.getChildren().addAll(list.get(i));   //list has to be added last, because otherwise its the same as clicking a bishop instead of a move button. Basically a second layer
+	    		
+	    			
+	    		}
+	    		
+	    		Scene les4 = new Scene (border, 1400, 850);
+	    		primaryStage.setScene(les4);
+	    	}
+	    	
+	    	if(lessonChoice == lesson5) // queen movement
+	    	{
+	    		lessonNum = 5;
+	    		for(int i = 0; i < pieces.size(); i++)
+	    		{
+	    			pieces.remove(i);  //clears the array so extra pieces dont show up
+	    			
+	    		}
+	    		
+	    		for(int i = 0; i < pieceButtons.size(); i++)
+	    		{
+	    			pieceButtons.remove(i);	//clears the array so extra pieces dont show up
+	    		}
+	    		
+	    		BorderPane border = new BorderPane();
+
+	    		HBox hbox = addHBoxLetters();
+	    		border.setBottom(hbox);
+	    		
+	    		VBox vbox = addVBoxNumbers();
+	    		border.setLeft(vbox);
+	    		
+	    		GridPane gpane = addGPaneBoard();
+	    		border.setCenter(gpane);
+	    		
+	    		VBox explanation = addLessonReader();
+	    		border.setRight(explanation);
+	    		
+	    		vbox.setAlignment(Pos.TOP_LEFT);
+	    		hbox.setAlignment(Pos.CENTER_LEFT);
+	    		explanation.setAlignment(Pos.TOP_RIGHT);
+	    		
+	    		
+	    		/**
+	    		 *  PIECE INITIALIZATION
+	    		 */
+	    		//the white queen - WHITE PIECES
+				Piece wWqueen = new Piece(true, "queen", 4, 1);
+				pieces.add(wWqueen);
+				Image imageWqueen = new Image("file:PicLib/whiteQueen.png"); 
+				Button whitequeen = new Button();
+				whitequeen.setGraphic(new ImageView(imageWqueen));
+				whitequeen.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				whitequeen.setOnAction(this);
+				whitequeen.setPrefSize(SQUARE_SIZE, SQUARE_SIZE); 
+				whitequeen.setLayoutY(rowToPixle(wWqueen.getRow()));
+				whitequeen.setLayoutX(columnToPixle(wWqueen.getColumn()));
+				pieceButtons.add(whitequeen);
+				
+				//the black queent - BlACK PIECES
+				Piece bBqueen = new Piece(false, "queen", 4, 8);
+				pieces.add(bBqueen);
+				Image imagebqueen = new Image("file:PicLib/blackQueen.png"); 
+				Button blackbqueen = new Button();
+				blackbqueen.setGraphic(new ImageView(imagebqueen));
+				blackbqueen.setStyle("-fx-background-color: transparent;"); //sets background of button to transparent
+				blackbqueen.setOnAction(this);
+				blackbqueen.setPrefSize(SQUARE_SIZE, SQUARE_SIZE);
+				blackbqueen.setLayoutY(rowToPixle(bBqueen.getRow()));
+				blackbqueen.setLayoutX(columnToPixle(bBqueen.getColumn()));
+				pieceButtons.add(blackbqueen);
+				
+				border.getChildren().addAll(whitequeen,blackbqueen);
+	    		// add the movement buttons to the board
+	    		for (int i = 0; i < list.size(); i++)
+	    		{
+
+	    			border.getChildren().addAll(list.get(i));   //list has to be added last, because otherwise its the same as clicking a bishop instead of a move button. Basically a second layer
+	    		
+	    			
+	    		}
+	    		
+	    		Scene les4 = new Scene (border, 1400, 850);
+	    		primaryStage.setScene(les4);
+	    	}
+	    	
+	    	if(lessonChoice == lesson6) //king movement, with check and checkmate rules
+	    	{
+	    		lessonNum = 6;
+	    		//ki
+	    	}
+	    	
+	    	if(lessonChoice == lesson7) //castling special rules
+	    	{
+	    		lessonNum = 6;
+	    		System.out.println("castling");
+	    	}
+	    	
+	    	if(lessonChoice == lesson8) //en passant
+	    	{
+	    		lessonNum = 7;
+	    		System.out.println("en passant");
+	    	}
+	    	
+	    	
+	    	
+	    });
+	    
+		//layout 1 - children laid out in vertical column
+		VBox layout1 = new VBox(20);
+		layout1.getChildren().addAll(play,lessons,achievements, settings, quit);
+		layout1.setAlignment(Pos.CENTER);
+		scene1 = new Scene (layout1, 1400,850);
+		
+		
+		
+		
+		//play scene 
+		VBox layout2 = new VBox(15);
+		layout2.getChildren().addAll(splay, tplay, back, quit1);
+		layout2.setAlignment(Pos.CENTER);
+		scene2 = new Scene (layout2, 1400,850);
+		
+		
+		//lesson scene
+		VBox layout3 = new VBox (20);
+		layout3.getChildren().addAll(lessonSelect,back1);
+		layout3.setAlignment(Pos.CENTER);
+		scene3 = new Scene (layout3,1400,850);
+		
+		//achievement scene
+		VBox layout4 = new VBox (20);
+		layout4.getChildren().addAll(back2);
+		scene4 = new Scene (layout4,1400,850);
+		
+		primaryStage.setScene(scene1);
+		primaryStage.setTitle("Great Pawn"); //sets title of window
+		primaryStage.setResizable(false);
+		primaryStage.show();
+		
+		
+		
+		
+	}
+	
+	public HBox addHBoxLetters() //adds the horizontal box pane to chess board lessons. Has letters
+	{
+	    HBox hbox = new HBox();
+	  
+	
+	    Label spacing = new Label (""); //spacing to get letters to line up with columns of board
+	    spacing.setPrefSize(120, 20);
+	    //letters of the board
+	    Label letter1 = new Label ("A");	    
+	    letter1.setPrefSize(100, 20);
+	    letter1.setStyle("-fx-font-size: 2em; ");
+		Label letter2 = new Label("B");
+		letter2.setPrefSize(100, 20);
+		letter2.setStyle("-fx-font-size: 2em; ");
+		Label letter3 = new Label("C");
+		letter3.setPrefSize(100, 20);
+		letter3.setStyle("-fx-font-size: 2em; ");
+		Label letter4 = new Label("D");
+		letter4.setPrefSize(100, 20);
+		letter4.setStyle("-fx-font-size: 2em; ");
+		Label letter5 = new Label("E");
+		letter5.setPrefSize(90, 20);
+		letter5.setStyle("-fx-font-size: 2em; ");
+		Label letter6 = new Label("F");
+		letter6.setPrefSize(90, 20);
+		letter6.setStyle("-fx-font-size: 2em; ");
+		Label letter7 = new Label("G");
+		letter7.setPrefSize(100, 20);
+		letter7.setStyle("-fx-font-size: 2em; ");
+		Label letter8 = new Label("H");
+		letter8.setPrefSize(100, 20);
+		letter8.setStyle("-fx-font-size: 2em; ");
+
+		
+	
+	    hbox.getChildren().addAll(spacing,letter1,letter2,letter3,letter4,letter5,letter6,letter7,letter8);
+
+	    return hbox;
+	}
+
+	public VBox addVBoxNumbers()  //adds vertical box pane to chess board with the numbers
+	{
+	    VBox vbox = new VBox();
+	    
+		Label number1 = new Label("1");
+		number1.setPrefSize(100, 100);
+		number1.setStyle("-fx-font-size: 2em; ");
+		
+		Label number2 = new Label("2");
+		number2.setPrefSize(100, 95);
+		number2.setStyle("-fx-font-size: 2em; ");
+
+		Label number3 = new Label("3");
+		number3.setPrefSize(100, 95);
+		number3.setStyle("-fx-font-size: 2em; ");
+
+		Label number4 = new Label("4");
+		number4.setPrefSize(100, 95);
+		number4.setStyle("-fx-font-size: 2em; ");
+
+		Label number5 = new Label("5");
+		number5.setPrefSize(100, 95);
+		number5.setStyle("-fx-font-size: 2em; ");
+
+		Label number6 = new Label("6");
+		number6.setPrefSize(100, 95);
+		number6.setStyle("-fx-font-size: 2em; ");
+
+		Label number7 = new Label("7");
+		number7.setPrefSize(100, 97);
+		number7.setStyle("-fx-font-size: 2em; ");
+
+		Label number8 = new Label("8");
+		number8.setPrefSize(100, 92);
+		number8.setStyle("-fx-font-size: 2em; ");
+
+
+	    vbox.getChildren().addAll(number8,number7,number6,number5,number4,number3,number2,number1);
+	    
+
+	    return vbox;
+	}
+	
+	//adds the board as a grid pane
+	public GridPane addGPaneBoard() 
+	{
+	  
+		
+		 
+		Image image = new Image("file:PicLib/GreenChessBoard.v3.png"); //each square is 94
+		 
+        // simple displays ImageView the image as is
+        ImageView iv1 = new ImageView();
+        iv1.setImage(image);
+        
+     
+        GridPane gpane = new GridPane();
+        gpane.setPrefSize(470, 470);
+        
+
+        gpane.getChildren().add(iv1);        
+      
+        
+	    return gpane;
+	}
+	
+	public VBox addLessonReader() //this is for the lessons
+	{
+		VBox vbox = new VBox();
+		if(lessonNum == 1)
+		{
+			Label explanation = new Label ("The base chess unit is a pawn. \nIt can only move forward, and take diagonally. \nOn the first move the pawn is able to move 2 spaces \n"
+					+ "However, after the first move, the pawn is only able to move one square. \n"
+					+ "Try and move the pawn two spaces forward");
+			explanation.setStyle("-fx-font-size: large; ");
+			
+			vbox.getChildren().addAll(explanation);
+			
+		}
+		
+		if(lessonNum == 2)
+		{
+			Label explanation = new Label ("The next piece we will look at is the bishop. \n This piece is only capable of moving diagonally across the board. \n "
+					+ "There are two bishops in the game for each side, one black square bishop and \n one white square bishop. \n Try moving both of the pieces and seeing how they "
+					+ "move around");
+			explanation.setStyle("-fx-font-size: large; ");
+			
+			vbox.getChildren().addAll(explanation);
+			
+		}
+		
+		if(lessonNum == 3)
+		{
+			Label explanation = new Label (" The next piece we will look at is the knight. \n This piece is special in that it can jump over other pieces. \n"
+					+ "It moves in an L pattern across the board. \n It can move two to the side and one up/down \n or it can move twop down/up and one to the side"
+					+ "\n Try moving this piece and seeing how it works");
+			explanation.setStyle("-fx-font-size: large; ");
+			
+			vbox.getChildren().addAll(explanation);
+			
+		}
+		
+		if(lessonNum == 4)
+		{
+			Label explanation = new Label (" This piece is the rook. \n It can move horizontally or vertically across the board. \n It can also complete a move called castling, this will be gone over later. \n "
+					+ "Check out how this rook works by moving them around.");
+			
+			explanation.setStyle("-fx-font-size: large; ");
+			
+			vbox.getChildren().addAll(explanation);
+			
+		}
+		
+		if(lessonNum == 5)
+		{
+			Label explanation = new Label (" This piece is the queen. \n The queen is able to move all directions across the board in a straight line. \n It is the best piece in the game, and should be kept safe.");
+			
+			explanation.setStyle("-fx-font-size: large; ");
+			
+			vbox.getChildren().addAll(explanation);
+		}
+		return vbox;
+		
+	}
+	
+	public static void switchLesson() //this is the method that switches the lesson once something is completed
+	{
+		
+		switch(lessonNum)
+		{
+		
+			case 1: 
+				
+			case 2:
+			
+			case 3:
+			
+			case 4:
+			
+			case 5:
+			
+			case 6:
+			
+			case 7:
+			
+			case 8:
+			
+			case 9:
+		
+		
+		
+			default: System.out.println("An error has occured in the level selection code");
+		
+		}
+		lessonNum++;
+	}
+	
+	public void pawnPromotion(boolean colour) 
+	{
+
+		if (colour)
+		{
+
+			for (int i = 0; i < whitePromotionPieces.size(); i++) 
+			{
+
+				whitePromotionPieces.get(i).setVisible(true);
+			}
+
+			promoting = true;
+
+		} else 
+		{
+
+			for (int i = 0; i < blackPromotionPieces.size(); i++) 
+			{
+
+				blackPromotionPieces.get(i).setVisible(true);
+			}
+
+			promoting = true;
+
+		}
+
+	}
+
+	public void pop(int d)
+	{
+
+		ArrayList<Integer> tempList1 = new ArrayList<Integer>();
+		ArrayList<Integer> tempList2 = new ArrayList<>();
+
+		for (int i = 0; i < d; i++)
+		{
+
+			tempList1.add(possibleMovesRow.get(0));
+			tempList2.add(possibleMovesColumn.get(0));
+			possibleMovesRow.remove(possibleMovesRow.get(0));
+			possibleMovesColumn.remove(possibleMovesColumn.get(0));
+
+		}
+
+		for (int i = 1; i < possibleMovesRow.size(); i++) {
+
+			tempList1.add(possibleMovesRow.get(i));
+			tempList2.add(possibleMovesColumn.get(i));
+
+		}
+
+		possibleMovesRow.clear();
+		possibleMovesColumn.clear();
+
+		while (tempList1.size() != 0) {
+
+			possibleMovesRow.add(tempList1.get(0));
+			possibleMovesColumn.add(tempList2.get(0));
+			tempList1.remove(tempList1.get(0));
+			tempList2.remove(tempList2.get(0));
+
+		}
+
+	}
+
+	
+	public int rowToPixle(int row) //this gets the y value
+	{
+
+		return (795 - (94 * row));
+
+	}
+
+	public int columnToPixle(int column) //this gets the x value
+	{
+
+		return (146 + (94 * (column - 1)));
+
+	}
+
+	//action handler when a piece is clicked or a button
+	public void handle(ActionEvent e) 
+	{
+		for (int i = 0; i < pieceButtons.size(); i++) //figures out button pressed
+		{
+			if (e.getSource() == pieceButtons.get(i))
+			{
+
+				for (int j = 0; j < list.size(); j++) //removes all the move buttons
+				{
+
+					list.get(j).setVisible(false);
+
+				}
+
+				if (pieces.get(i).getColour() == turn) //if its color is its turn, then findMoves works 
+				{
+					pieceSelected = i;
+					findMoves(pieces.get(i), true, true);
+					
+				}
+
+				
+			}
+
+		}
+		
+
+		for (int i = 0; i < list.size(); i++) {
+
+			if (e.getSource() == list.get(i)) {
+
+				//move(list.get(i).getLocation().x, list.get(i).getLocation().y, pieceSelected);
+				move((int)list.get(i).getLayoutX(),(int)list.get(i).getLayoutY(), pieceSelected); //cast the doubles to ints 
+																								// Moves piece selected to the movement button
+
+				if (turn) {
+
+					turn = false;
+
+				} else {
+
+					turn = true;
+
+				}
+
+				boolean checkMate = true;
+
+				for (int j = 0; j < pieces.size(); j++) {
+
+					if (pieces.get(j).getColour() != pieces.get(pieceSelected).getColour()) {
+
+						findMoves(pieces.get(j), false, true);
+
+						if (possibleMovesRow.size() != 0) {
+
+							checkMate = false;
+							break;
+
+						}
+
+					}
+
+				}
+
+				for (int j = 0; j < pieces.size(); j++) {
+
+					if (pieces.get(j).getColour() != pieces.get(pieceSelected).getColour()
+							&& pieces.get(j).getPieceType().equals("king") && checkMate) {
+
+						if (isAttacked(pieces.get(j).getRow(), pieces.get(j).getColumn(), pieces.get(j))) {
+
+							System.out.println("Check Mate");
+
+						} else {
+
+							System.out.println("Stale Mate");
+
+						}
+
+					}
+
+				}
+
+				if (pieces.size() < 3) {
+
+					System.out.println("Stale Mate");
+
+				} else if (pieces.size() == 3) {
+
+					for (int j = 0; j < pieces.size(); j++) {
+
+						if (!(pieces.get(j).getPieceType().equals("king")
+								|| pieces.get(j).getPieceType().equals("queen")
+								|| pieces.get(j).getPieceType().equals("pawn"))) {
+
+							System.out.println("Stale Mate");
+
+						}
+
+					}
+
+				} else if (pieces.size() == 4) {
+
+					int whiteNum = 0;
+
+					for (int j = 0; j < pieces.size(); j++) {
+
+						if (pieces.get(j).getColour()) {
+
+							whiteNum++;
+
+						}
+
+					}
+
+					if (whiteNum == 2) {
+
+						System.out.println("Stale Mate");
+
+					}
+
+				}
+
+			}
+
+		}
+
+
+	}
+	
+	//checks if the move options are allowed for the pieces
+	public boolean checkMove(int plusR, int plusC, Piece e) {
+
+		boolean canMove = true;
+		
+		for (int j = 0; j < pieces.size(); j++) {
+
+			if (pieces.get(j).getRow() == e.getRow() + plusR && pieces.get(j).getColumn() == e.getColumn() + plusC)
+			{
+
+				if (e.getColour() != pieces.get(j).getColour() && !e.getPieceType().equals("pawn") && canMove) {
+
+					possibleMovesRow.add(e.getRow() + plusR);
+					possibleMovesColumn.add(e.getColumn() + plusC);
+
+				}
+
+				canMove = false;
+
+			}
+			
+		}
+		
+		return canMove;
+
+	}
+	
+	public void isChecked(Piece e)
+	{
+		//this stores the pieces original position
+		int tempR = e.getRow();
+		int tempC = e.getColumn();
+		//this is a temporary list used to store which possible moves need to be deleted
+		ArrayList<Integer> deleteIndex = new ArrayList<Integer>();
+
+		//search through all of the pieces
+		for (int i = 0; i < pieces.size(); i++) {
+			//find the king
+			if (pieces.get(i).getPieceType().equals("king") && pieces.get(i).getColour() == e.getColour()) {
+				//move the piece to its possible move locations
+				for (int j = 0; j < possibleMovesRow.size(); j++) {
+
+					e.setRow(possibleMovesRow.get(j));
+					e.setColumn(possibleMovesColumn.get(j));
+					//if the king is under attack, add this move to the delete index
+					if (isAttacked(pieces.get(i).getRow(), pieces.get(i).getColumn(), e)) {
+						//don't add it to the delete index if it removes the piece that is attacking the king
+						
+						if (attackingPieces.size() == 1) {
+						
+						if (!(e.getRow() == attackingPieces.get(0).getRow()
+								&& e.getColumn() == attackingPieces.get(0).getColumn()
+								&& attackingPieces.size() == 1)) {
+
+						//} else {
+
+							deleteIndex.add(j);
+
+						}
+						
+						}
+
+					}
+
+					// set the piece back to its original location
+					e.setRow(tempR);
+					e.setColumn(tempC);
+					// reset the possible move buttonsfi
+					findMoves(e, false, false);
+
+				}
+
+			}
+
+		}
+		// remove the pieces form the move lists according to the deleteIndex list
+		for (int i = deleteIndex.size() - 1; i >= 0; i--) {
+
+			pop(deleteIndex.get(i));
+		}
+
+	}
+
+	
+	
+	//moves the piece selected
+	public void move(int x, int y, int pieceIndex) {
+
+
+		pieces.get(pieceIndex).setIsMoved(true);
+
+		for (int i = 0; i < list.size(); i++) {
+
+			list.get(i).setVisible(false);
+
+		}
+
+		if (pieceButtons.get(pieceIndex).getLayoutX() + 188 == x
+				&& pieces.get(pieceIndex).getPieceType().equals("king")) {
+
+			for (int i = 0; i < pieces.size(); i++) {
+
+				if (pieces.get(i).getColumn() == 8 && pieces.get(i).getPieceType().equals("rook")
+						&& pieces.get(i).getColour() == pieces.get(pieceIndex).getColour()) 
+				{
+
+					move(columnToPixle(6), (int) pieceButtons.get(i).getLayoutY(), i); //layout y is casted to an int because the method utilises an int instead 
+
+				}
+
+			}
+
+		} 
+		else if (pieceButtons.get(pieceIndex).getLayoutX() - 188 == x
+				&& pieces.get(pieceIndex).getPieceType().equals("king")) {
+
+			for (int i = 0; i < pieces.size(); i++) {
+
+				if (pieces.get(i).getColumn() == 1 && pieces.get(i).getPieceType().equals("rook")
+						&& pieces.get(i).getColour() == pieces.get(pieceIndex).getColour()) {
+
+					move(columnToPixle(4),(int) pieceButtons.get(i).getLayoutY(), i);
+
+				}
+
+			}
+
+		}
+		
+
+		if (y == rowToPixle(enPassantWhite.getRow()) && x == columnToPixle(enPassantWhite.getColumn())) {
+
+			for (int i = 0; i < pieces.size(); i++) {
+
+				if (pieces.get(i).getRow() == enPassantWhite.getRow() + 1
+						&& pieces.get(i).getColumn() == enPassantWhite.getColumn()) {
+
+					if (pieceIndex > i) {
+
+						pieceIndex--;
+
+					}
+
+					pieces.remove(i);
+					pieceButtons.get(i).setVisible(false);
+					pieceButtons.remove(i);
+
+				}
+
+			}
+
+		}
+
+		if (y == rowToPixle(enPassantBlack.getRow()) && x == columnToPixle(enPassantBlack.getColumn())) {
+
+			for (int i = 0; i < pieces.size(); i++) {
+
+				if (pieces.get(i).getRow() == enPassantBlack.getRow() - 1
+						&& pieces.get(i).getColumn() == enPassantBlack.getColumn()) {
+
+					pieces.remove(i);
+					pieceButtons.get(i).setVisible(false);
+					pieceButtons.remove(i);
+
+				}
+
+			}
+
+		}
+
+		enPassantWhite.setColumn(10);
+		enPassantBlack.setColumn(10);
+
+		if (pieces.get(pieceIndex).getPieceType().equals("pawn")) {
+
+			if (pieces.get(pieceIndex).getColour() && columnToPixle(pieces.get(pieceIndex).getColumn()) == x
+					&& rowToPixle(pieces.get(pieceIndex).getRow() + 2) == y) {
+
+				enPassantWhite.setColumn(pieces.get(pieceIndex).getColumn());
+
+			} else if ((!pieces.get(pieceIndex).getColour()) && columnToPixle(pieces.get(pieceIndex).getColumn()) == x
+					&& rowToPixle(pieces.get(pieceIndex).getRow() - 2) == y) {
+
+				enPassantBlack.setColumn(pieces.get(pieceIndex).getColumn());
+
+			}
+
+		}
+
+
+
+		pieceButtons.get(pieceIndex).setLayoutX(x);
+		pieceButtons.get(pieceIndex).setLayoutY(y);
+
+		pieces.get(pieceIndex).setRow(8 - ((y - 5) / 94));
+		pieces.get(pieceIndex).setColumn(((x - 62) / 94) + 1);
+		
+		if (pieces.get(pieceIndex).getColour()) {
+
+			Piece wPiece = new Piece(pieces.get(pieceIndex).getColour(), pieces.get(pieceIndex).getPieceType(),
+					pieces.get(pieceIndex).getRow(), pieces.get(pieceIndex).getColumn());
+
+			threeMoveWhite.add(0, wPiece);
+
+			if (threeMoveWhite.size() > 5) {
+
+				threeMoveWhite.remove(5);
+
+			}
+
+		} else {
+
+			Piece bPiece = new Piece(pieces.get(pieceIndex).getColour(), pieces.get(pieceIndex).getPieceType(),
+					pieces.get(pieceIndex).getRow(), pieces.get(pieceIndex).getColumn());
+
+			threeMoveBlack.add(0, bPiece);
+
+			if (threeMoveBlack.size() > 5) {
+
+				threeMoveBlack.remove(5);
+
+			}
+
+		}
+
+		for (int j = 0; j < (threeMoveWhite.size() - 1); j++) {
+
+			int countW = 0;
+
+			for (int i = j + 1; i < threeMoveWhite.size(); i++) {
+
+				if (threeMoveWhite.get(j).isEqual(threeMoveWhite.get(i))) {
+
+					countW++;
+
+				}
+
+			}
+
+			if (countW >= 2) {
+
+				for (int k = 0; k < (threeMoveBlack.size() - 1); k++) {
+
+					int countB = 0;
+
+					for (int i = k + 1; i < threeMoveBlack.size(); i++) {
+
+						if (threeMoveBlack.get(k).isEqual(threeMoveBlack.get(i))) {
+
+							countB++;
+
+						}
+
+					}
+
+					if (countB >= 2) {
+
+						System.out.println("Stale Mate");
+						break;
+
+					}
+
+				}
+
+				break;
+
+			}
+
+		}
+
+
+		for (int i = 0; i < pieces.size(); i++) {
+
+			if (pieces.get(i).getRow() == pieces.get(pieceIndex).getRow()
+					&& pieces.get(i).getColumn() == pieces.get(pieceIndex).getColumn()
+					&& pieces.get(i) != pieces.get(pieceIndex)) {
+
+				pieces.remove(i);
+				pieceButtons.get(i).setVisible(false);
+				pieceButtons.remove(i);
+
+				break;
+
+			}
+
+		}
+
+		for (int i = 0; i < pieces.size(); i++) {
+
+			if (pieces.get(i).getPieceType().equals("king")) {
+
+				if (isAttacked(pieces.get(i).getRow(), pieces.get(i).getColumn(), pieces.get(i))) {
+
+					if (pieces.get(i).getColour())
+					{
+
+						whiteCheck = true;
+
+					} 
+					else
+					{
+
+						blackCheck = false;
+
+					}
+
+				}
+				else 
+				{
+
+					if (pieces.get(i).getColour())
+					{
+
+						whiteCheck = true;
+
+					} else
+					{
+
+						blackCheck = true;
+
+					}
+					
+				}
+
+			}
+
+		}
+		
+		if (pieces.size() > pieceIndex) {
+
+			if (pieces.get(pieceIndex).getRow() == 8 && pieces.get(pieceIndex).getColour()
+					&& pieces.get(pieceIndex).getPieceType().equals("pawn")) {
+
+				pawnPromotion(true);
+
+			} else if (pieces.get(pieceIndex).getRow() == 1 && !pieces.get(pieceIndex).getColour()
+					&& pieces.get(pieceIndex).getPieceType().equals("pawn")) {
+
+				pawnPromotion(false);
+
+			}
+
+		}
+
+
+	}
+	
+	//checks if piece under attack
+	public boolean isAttacked(int r, int c, Piece e) 
+	{
+
+		boolean attacked = false;
+
+		for (int i = 0; i < pieces.size(); i++)
+		{
+
+			if (pieces.get(i).getColour() != e.getColour())
+			{
+
+				findMoves(pieces.get(i), false, false);
+
+				for (int j = 0; j < possibleMovesRow.size(); j++) 
+				{
+
+					if (possibleMovesRow.get(j) == r && possibleMovesColumn.get(j) == c) 
+					{
+						attacked = true;
+
+					}
+
+				}
+
+			}
+
+		}
+
+		findMoves(e, false, false);
+
+		return attacked;
+
+	}
+	
+	//the potential moves that the pieces can make
+	public void findMoves(Piece e, boolean show, boolean check) {
+
+		// stores the row and column of the possible moves
+		possibleMovesRow.clear();
+		possibleMovesColumn.clear();
+		
+		// determines the type of piece selected to determine which moves to add
+		switch (e.getPieceType()) {
+
+		case "pawn":
+			// add the buttons in front of the pawn if it is white or behind if it is black
+			if (e.getColour()) {
+
+				// the pawn can move one space in front
+				if (checkMove(1, 0, e)) {
+
+					possibleMovesRow.add(e.getRow() + 1);
+					possibleMovesColumn.add(e.getColumn());
+
+					//the pawn can move to spaces in front if it has not moved yet
+					if (e.getRow() == 2 && checkMove(2, 0, e)) {
+
+						possibleMovesRow.add(e.getRow() + 2);
+						possibleMovesColumn.add(e.getColumn());
+
+					}
+
+				}
+
+				for (int i = 0; i < pieces.size(); i++) {
+
+					if ((e.getRow() + 1 == pieces.get(i).getRow() && e.getColumn() + 1 == pieces.get(i).getColumn()
+							&& e.getColour() != pieces.get(i).getColour())
+							|| (e.getRow() + 1 == enPassantBlack.getRow()
+									&& e.getColumn() + 1 == enPassantBlack.getColumn()
+									&& e.getColour() != enPassantBlack.getColour() && i == 0)) {
+
+						possibleMovesRow.add(e.getRow() + 1);
+						possibleMovesColumn.add(e.getColumn() + 1);
+
+					}
+
+					if ((e.getRow() + 1 == pieces.get(i).getRow() && e.getColumn() - 1 == pieces.get(i).getColumn()
+							&& e.getColour() != pieces.get(i).getColour())
+							|| (e.getRow() + 1 == enPassantBlack.getRow()
+									&& e.getColumn() - 1 == enPassantBlack.getColumn()
+									&& e.getColour() != enPassantBlack.getColour() && i == 0)) {
+
+						possibleMovesRow.add(e.getRow() + 1);
+						possibleMovesColumn.add(e.getColumn() - 1);
+
+					}
+
+				}
+
+			} else {
+
+				if (checkMove(-1, 0, e)) {
+
+					possibleMovesRow.add(e.getRow() - 1);
+					possibleMovesColumn.add(e.getColumn());
+
+					if (e.getRow() == 7 && checkMove(-2, 0, e)) {
+
+						possibleMovesRow.add(e.getRow() - 2);
+						possibleMovesColumn.add(e.getColumn());
+
+					}
+
+				}
+
+				for (int i = 0; i < pieces.size(); i++) {
+
+					if ((e.getRow() - 1 == pieces.get(i).getRow() && e.getColumn() + 1 == pieces.get(i).getColumn()
+							&& e.getColour() != pieces.get(i).getColour())
+							|| (e.getRow() - 1 == enPassantWhite.getRow()
+									&& e.getColumn() + 1 == enPassantWhite.getColumn()
+									&& e.getColour() != enPassantWhite.getColour() && i == 0)) {
+
+						possibleMovesRow.add(e.getRow() - 1);
+						possibleMovesColumn.add(e.getColumn() + 1);
+
+					}
+
+					if ((e.getRow() - 1 == pieces.get(i).getRow() && e.getColumn() - 1 == pieces.get(i).getColumn()
+							&& e.getColour() != pieces.get(i).getColour())
+							|| (e.getRow() - 1 == enPassantWhite.getRow()
+									&& e.getColumn() - 1 == enPassantWhite.getColumn()
+									&& e.getColour() != enPassantWhite.getColour() && i == 0)) {
+
+						possibleMovesRow.add(e.getRow() - 1);
+						possibleMovesColumn.add(e.getColumn() - 1);
+
+					}
+
+				}
+
+			}
+			break;
+		case "rook":
+
+			for (int i = 1; i + e.getRow() <= 8; i++) {
+
+				if (checkMove(i, 0, e)) {
+
+					possibleMovesRow.add(e.getRow() + i);
+					possibleMovesColumn.add(e.getColumn());
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; e.getRow() - i > 0; i++) {
+
+				if (checkMove(-i, 0, e)) {
+
+					possibleMovesRow.add(e.getRow() - i);
+					possibleMovesColumn.add(e.getColumn());
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; i + e.getColumn() <= 8; i++) {
+
+				if (checkMove(0, i, e)) {
+
+					possibleMovesRow.add(e.getRow());
+					possibleMovesColumn.add(e.getColumn() + i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; e.getColumn() - i > 0; i++) {
+
+				if (checkMove(0, -i, e)) {
+
+					possibleMovesRow.add(e.getRow());
+					possibleMovesColumn.add(e.getColumn() - i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			break;
+		case "knight":
+
+			if (e.getRow() < 7) {
+
+				if (e.getColumn() < 8) {
+
+					if (checkMove(2, 1, e)) {
+
+						possibleMovesRow.add(e.getRow() + 2);
+						possibleMovesColumn.add(e.getColumn() + 1);
+					}
+
+				}
+
+				if (e.getColumn() > 1) {
+
+					if (checkMove(2, -1, e)) {
+
+						possibleMovesRow.add(e.getRow() + 2);
+						possibleMovesColumn.add(e.getColumn() - 1);
+
+					}
+
+				}
+
+			}
+
+			if (e.getRow() > 2) {
+
+				if (e.getColumn() < 8) {
+
+					if (checkMove(-2, 1, e)) {
+
+						possibleMovesRow.add(e.getRow() - 2);
+						possibleMovesColumn.add(e.getColumn() + 1);
+
+					}
+				}
+
+				if (e.getColumn() > 1) {
+
+					if (checkMove(-2, -1, e)) {
+
+						possibleMovesRow.add(e.getRow() - 2);
+						possibleMovesColumn.add(e.getColumn() - 1);
+
+					}
+				}
+
+			}
+
+			if (e.getColumn() < 7) {
+
+				if (e.getRow() < 8) {
+
+					if (checkMove(1, 2, e)) {
+
+						possibleMovesRow.add(e.getRow() + 1);
+						possibleMovesColumn.add(e.getColumn() + 2);
+
+					}
+				}
+
+				if (e.getRow() > 1) {
+
+					if (checkMove(-1, 2, e)) {
+
+						possibleMovesRow.add(e.getRow() - 1);
+						possibleMovesColumn.add(e.getColumn() + 2);
+
+					}
+
+				}
+
+			}
+
+			if (e.getColumn() > 2) {
+
+				if (e.getRow() < 8)
+
+					if (checkMove(1, -2, e)) {
+
+						possibleMovesRow.add(e.getRow() + 1);
+						possibleMovesColumn.add(e.getColumn() - 2);
+
+					}
+
+				if (e.getRow() > 1) {
+
+					if (checkMove(-1, -2, e)) {
+
+						possibleMovesRow.add(e.getRow() - 1);
+						possibleMovesColumn.add(e.getColumn() - 2);
+
+					}
+				}
+
+			}
+
+			break;
+		case "bishop":
+
+			for (int i = 1; i + e.getRow() <= 8 && i + e.getColumn() <= 8; i++) {
+
+				if (checkMove(i, i, e)) {
+
+					possibleMovesRow.add(e.getRow() + i);
+					possibleMovesColumn.add(e.getColumn() + i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; e.getRow() - i >= 1 && e.getColumn() - i >= 1; i++) {
+
+				if (checkMove(-i, -i, e)) {
+
+					possibleMovesRow.add(e.getRow() - i);
+					possibleMovesColumn.add(e.getColumn() - i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; i + e.getRow() <= 8 && e.getColumn() - i >= 1; i++) {
+
+				if (checkMove(i, -i, e)) {
+
+					possibleMovesRow.add(e.getRow() + i);
+					possibleMovesColumn.add(e.getColumn() - i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; e.getRow() - i >= 1 && i + e.getColumn() <= 8; i++) {
+
+				if (checkMove(-i, i, e)) {
+
+					possibleMovesRow.add(e.getRow() - i);
+					possibleMovesColumn.add(e.getColumn() + i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+			break;
+		case "queen":
+
+			for (int i = 1; i + e.getRow() <= 8; i++) {
+
+				if (checkMove(i, 0, e)) {
+
+					possibleMovesRow.add(e.getRow() + i);
+					possibleMovesColumn.add(e.getColumn());
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; e.getRow() - i > 0; i++) {
+
+				if (checkMove(-i, 0, e)) {
+
+					possibleMovesRow.add(e.getRow() - i);
+					possibleMovesColumn.add(e.getColumn());
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; i + e.getColumn() <= 8; i++) {
+
+				if (checkMove(0, i, e)) {
+
+					possibleMovesRow.add(e.getRow());
+					possibleMovesColumn.add(e.getColumn() + i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; e.getColumn() - i > 0; i++) {
+
+				if (checkMove(0, -i, e)) {
+
+					possibleMovesRow.add(e.getRow());
+					possibleMovesColumn.add(e.getColumn() - i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; i + e.getRow() <= 8 && i + e.getColumn() <= 8; i++) {
+
+				if (checkMove(i, i, e)) {
+
+					possibleMovesRow.add(e.getRow() + i);
+					possibleMovesColumn.add(e.getColumn() + i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; e.getRow() - i >= 1 && e.getColumn() - i >= 1; i++) {
+
+				if (checkMove(-i, -i, e)) {
+
+					possibleMovesRow.add(e.getRow() - i);
+					possibleMovesColumn.add(e.getColumn() - i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; i + e.getRow() <= 8 && e.getColumn() - i >= 1; i++) {
+
+				if (checkMove(i, -i, e)) {
+
+					possibleMovesRow.add(e.getRow() + i);
+					possibleMovesColumn.add(e.getColumn() - i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			for (int i = 1; e.getRow() - i >= 1 && i + e.getColumn() <= 8; i++) {
+
+				if (checkMove(-i, i, e)) {
+
+					possibleMovesRow.add(e.getRow() - i);
+					possibleMovesColumn.add(e.getColumn() + i);
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			break;
+		case "king":
+
+			if (e.getRow() < 8) {
+
+				if (checkMove(1, 0, e)) {
+
+					possibleMovesRow.add(e.getRow() + 1);
+					possibleMovesColumn.add(e.getColumn());
+
+				}
+
+				if (e.getColumn() > 1) {
+
+					if (checkMove(1, -1, e)) {
+
+						possibleMovesRow.add(e.getRow() + 1);
+						possibleMovesColumn.add(e.getColumn() - 1);
+
+					}
+
+				}
+
+				if (e.getColumn() < 8) {
+
+					if (checkMove(1, 1, e)) {
+
+						possibleMovesRow.add(e.getRow() + 1);
+						possibleMovesColumn.add(e.getColumn() + 1);
+
+					}
+
+				}
+
+			}
+
+			if (e.getRow() > 1) {
+
+				if (checkMove(-1, 0, e)) {
+
+					possibleMovesRow.add(e.getRow() - 1);
+					possibleMovesColumn.add(e.getColumn());
+
+				}
+
+				if (e.getColumn() > 1) {
+
+					if (checkMove(-1, -1, e)) {
+
+						possibleMovesRow.add(e.getRow() - 1);
+						possibleMovesColumn.add(e.getColumn() - 1);
+
+					}
+
+				}
+
+				if (e.getColumn() < 8) {
+
+					if (checkMove(-1, 1, e)) {
+
+						possibleMovesRow.add(e.getRow() - 1);
+						possibleMovesColumn.add(e.getColumn() + 1);
+
+					}
+
+				}
+
+			}
+
+			if (e.getColumn() > 1) {
+
+				if (checkMove(0, -1, e)) {
+
+					possibleMovesRow.add(e.getRow());
+					possibleMovesColumn.add(e.getColumn() - 1);
+
+				}
+
+			}
+
+			if (e.getColumn() < 8) {
+
+				if (checkMove(0, 1, e)) {
+
+					possibleMovesRow.add(e.getRow());
+					possibleMovesColumn.add(e.getColumn() + 1);
+
+				}
+
+			}
+
+			if (show) {
+
+				for (int i = 0; i < pieces.size(); i++) {
+
+					if (pieces.get(i).getColour() == e.getColour() && pieces.get(i).getColumn() == 8
+							&& pieces.get(i).getPieceType().equals("rook")) {
+
+						kingCastle = true;
+
+						if (pieces.get(i).getIsMoved()) {
+
+							kingCastle = false;
+
+						}
+
+					}
+
+				}
+
+				for (int j = 0; j < pieces.size(); j++) {
+
+					if (pieces.get(j).getRow() == e.getRow() && pieces.get(j).getColumn() == e.getColumn() + 2
+							|| pieces.get(j).getRow() == e.getRow() && pieces.get(j).getColumn() == e.getColumn() + 1
+							|| e.getIsMoved()) {
+
+						kingCastle = false;
+
+					}
+
+				}
+
+				if (e.getColour()) {
+
+					if (isAttacked(1, 5, e) || isAttacked(1, 6, e) || isAttacked(1, 7, e) || isAttacked(1, 8, e)) {
+
+						kingCastle = false;
+
+					}
+
+				} else {
+
+					if (isAttacked(8, 5, e) || isAttacked(8, 6, e) || isAttacked(8, 7, e) || isAttacked(8, 8, e)) {
+
+						kingCastle = false;
+
+					}
+
+				}
+
+				for (int i = 0; i < pieces.size(); i++) {
+
+					if (pieces.get(i).getColour() == e.getColour() && pieces.get(i).getColumn() == 1
+							&& pieces.get(i).getPieceType().equals("rook")) {
+
+						queenCastle = true;
+
+						if (pieces.get(i).getIsMoved()) {
+
+							queenCastle = false;
+
+						}
+
+					}
+
+				}
+
+				for (int j = 0; j < pieces.size(); j++) {
+
+					if (pieces.get(j).getRow() == e.getRow() && pieces.get(j).getColumn() == e.getColumn() - 3
+							|| pieces.get(j).getRow() == e.getRow() && pieces.get(j).getColumn() == e.getColumn() - 2
+							|| pieces.get(j).getRow() == e.getRow() && pieces.get(j).getColumn() == e.getColumn() - 1
+							|| e.getIsMoved()) {
+
+						queenCastle = false;
+
+					}
+
+				}
+
+				if (queenCastle) {
+
+					if (e.getColour()) {
+
+						if (isAttacked(1, 1, e) || isAttacked(1, 2, e) || isAttacked(1, 3, e) || isAttacked(1, 4, e)
+								|| isAttacked(1, 5, e)) {
+
+							queenCastle = false;
+
+						}
+
+					} else {
+
+						if (isAttacked(8, 1, e) || isAttacked(8, 2, e) || isAttacked(8, 3, e) || isAttacked(8, 4, e)
+								|| isAttacked(8, 5, e)) {
+
+							queenCastle = false;
+
+						}
+
+					}
+
+				}
+
+			}
+
+			break;
+
+		}
+
+		if (check) {
+
+			isChecked(e);
+
+		}
+
+		for (int i = 0; i < possibleMovesRow.size(); i++) {
+
+			
+			list.get(i).setLayoutY(rowToPixle(possibleMovesRow.get(i)));
+			list.get(i).setLayoutX(columnToPixle(possibleMovesColumn.get(i)));
+			
+			if (show) {
+
+				list.get(i).setVisible(true);
+
+			}
+
+		}
+		
+
+		for (int j = 0; j < pieces.size(); j++) 
+		{
+
+			if (pieces.get(j).getPieceType().equals("king") && pieces.get(j).getColour() == turn && kingCastle) {
+
+				list.get(possibleMovesRow.size()).setLayoutX(columnToPixle(pieces.get(j).getColumn() + 2));
+				list.get(possibleMovesRow.size()).setLayoutY(rowToPixle(pieces.get(j).getRow()));
+				list.get(possibleMovesRow.size()).setVisible(true);
+
+			}
+
+		}
+
+		for (int j = 0; j < pieces.size(); j++)
+		{
+
+			if (pieces.get(j).getPieceType().equals("king") && pieces.get(j).getColour() == turn && queenCastle) 
+			{
+
+				list.get(possibleMovesRow.size()).setLayoutX(columnToPixle(pieces.get(j).getColumn() - 2));
+				list.get(possibleMovesRow.size()).setLayoutY(rowToPixle(pieces.get(j).getRow()));
+				list.get(possibleMovesRow.size()).setVisible(true);
+
+			}
+
+		}
+
+	}
+}
